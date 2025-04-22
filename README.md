@@ -1,2 +1,2 @@
-# Black-Yellow
-A group of talented individuals with great aspirations.
+# CSIT314
+Team: The Debuggers
