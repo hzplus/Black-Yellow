@@ -1,27 +1,28 @@
 <?php
 session_start();
-if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Admin') {
-    header("Location: ../../login.php");
+if (!isset($_SESSION['username'])) {
+    header("Location: login.php");
     exit();
 }
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Admin Dashboard - Black&Yellow</title>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
+
+
 </head>
 <body>
 
-<!-- Welcome top bar -->
+<!-- Topbar with logo and welcome text -->
 <div class="topbar">
-    Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!
-</div>
-
-<!-- Logo section -->
-<div class="logo">
-    <img src="../../assets/images/logo.jpg" alt="Logo">
+<img src="../../assets/images/logo.jpg" alt="Logo">
+    <div>
+        Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!
+    </div>
 </div>
 
 <!-- Navigation bar -->
@@ -29,10 +30,11 @@ if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Admin') {
     <a href="#">Home</a>
     <a href="#">User Accounts</a>
     <a href="#">User Profiles</a>
+    <a href="logout.php">Logout</a>
 </div>
 
-<!-- Main content -->
-<div class="dashboard-content">
+<!-- Dashboard content -->
+<div class="dashboard">
     <h1>Admin Dashboard</h1>
     <p>This is the main control panel for Admin users.</p>
 </div>
