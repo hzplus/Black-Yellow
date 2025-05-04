@@ -96,15 +96,16 @@ class User {
         return $result->fetch_assoc();
     }
     
-    public static function update($conn, $id, $username, $email, $role, $status) {
-        $stmt = $conn->prepare("UPDATE users SET username = ?, email = ?, role = ?, status = ? WHERE userid = ?");
-        if (!$stmt) return false;
-    
-        $stmt->bind_param("ssssi", $username, $email, $role, $status, $id);
-        $result = $stmt->execute();
-        $stmt->close();
-        return $result;
-    }
+    public static function update($conn, $id, $username, $email, $role, $status)
+{
+    $stmt = $conn->prepare("UPDATE users SET username = ?, email = ?, role = ?, status = ? WHERE userid = ?");
+    if (!$stmt) return false;
+
+    $stmt->bind_param("ssssi", $username, $email, $role, $status, $id);
+    $result = $stmt->execute();
+    $stmt->close();
+    return $result;
+}
 
     public static function exists($conn, $username, $email) {
         $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? OR email = ?");

@@ -14,8 +14,8 @@ class editUserController {
         return $user;
     }
 
-    public function updateUser($id, $username, $email, $role) {
+    public function updateUser($id, $username, $email, $role, $status) {
         $conn = Database::connect();
-        return User::update($conn, $id, $username, $email, $role);
+        return User::update($conn, $id, $username, $email, $role, $status);
     }
 }

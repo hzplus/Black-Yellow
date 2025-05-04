@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <br><br>
         <button type="submit">Update User</button>
-        <a href="editUsers.php"><button type="button">Back</button></a>
+        <a href="editUser.php"><button type="button">Back</button></a>
     </form>
 </div>
 

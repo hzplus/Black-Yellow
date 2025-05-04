@@ -60,6 +60,7 @@ $users = $controller->getAllUsers();
                     <td><?= htmlspecialchars($user->email) ?></td>
                     <td><?= htmlspecialchars($user->role) ?></td>
                     <td><?= htmlspecialchars($user->status) ?></td>
+                    <td><a href="viewUserDetails.php?user_id=<?= $user->userid ?>" class="button">View</a></td>
                 </tr>
             <?php endforeach; ?>
         </tbody>

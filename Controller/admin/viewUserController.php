@@ -1,13 +1,15 @@
 <?php
 require_once '../../db/Database.php';
-require_once '../../Entity/user/User.php';
+require_once '../../Entity/user/user.php';
 
 class viewUserController {
+    public function getUserById($id) {
+        $conn = Database::connect();
+        return User::getById($conn, $id);
+    }
+
     public function getAllUsers() {
         $conn = Database::connect();
-        $users = User::getAllUsers($conn);
-        Database::disconnect();
-        return $users;
+        return User::getAllUsers($conn);
     }
 }
-?>
