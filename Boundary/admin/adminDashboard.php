@@ -1,7 +1,7 @@
 <?php
 session_start();
-if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Admin') {
-    header("Location: ../../login.php");
+if (!isset($_SESSION['username'])) {
+    header("Location: login.php");
     exit();
 }
 ?>
@@ -12,6 +12,8 @@ if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Admin') {
     <meta charset="UTF-8">
     <title>Admin Dashboard - Black&Yellow</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
+
+
 </head>
 <body>
 
