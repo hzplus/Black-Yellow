@@ -67,8 +67,8 @@ $users = $controller->getAllUsers();
     </table>
 
     <br>
-    <a href="userAccountsMenu.php">← Back to User Accounts</a>
-</div>
+    <a href="userAccountsMenu.php"><button type="button">Back</button></a>
+    </div>
 
 </body>
 </html>

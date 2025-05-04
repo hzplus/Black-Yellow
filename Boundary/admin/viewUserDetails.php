@@ -53,8 +53,8 @@ if (!$user) {
     <p><strong>Status:</strong> <?= htmlspecialchars($user['status']) ?></p>
 
     <br>
-    <a href="viewUser.php" class="button">← Back to List</a>
-</div>
+    <a href="userProfilesMenu.php"><button type="button">Back</button></a>
+    </div>
 
 </body>
 </html>

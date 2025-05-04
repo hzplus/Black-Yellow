@@ -1,5 +1,5 @@
 <?php
-require_once '../../db/database.php';
+require_once '../../db/Database.php';
 require_once '../../Entity/userProfile.php';
 
 class searchUserProfileController {
@@ -8,4 +8,3 @@ class searchUserProfileController {
         return userProfile::search($conn, $keyword);
     }
 }
-?>

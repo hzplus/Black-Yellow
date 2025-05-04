@@ -50,10 +50,10 @@ if (!$profile) {
     <p><strong>Profile ID:</strong> <?= htmlspecialchars($profile->profileId) ?></p>
     <p><strong>Role:</strong> <?= htmlspecialchars($profile->role) ?></p>
     <p><strong>Description:</strong> <?= htmlspecialchars($profile->description) ?></p>
+    
 
     <br>
-    <a href="viewUserProfiles.php"><button type="button">Back</button></a>
-</div>
+    <a href="userProfilesMenu.php"><button type="button">Back</button></a></div>
 
 </body>
 </html>

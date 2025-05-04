@@ -93,6 +93,8 @@ function filterUsers() {
     document.getElementById('noResultsMessage').style.display = (visible === 0) ? "block" : "none";
 }
 </script>
+<a href="userAccountsMenu.php"><button type="button">Back</button></a>
+
 
 </body>
 </html>
