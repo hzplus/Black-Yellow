@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once 'Controller/auth/AuthController.php';
+require_once 'Controller/auth/authController.php';
 
 $message = "";
 
@@ -9,10 +9,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $auth = new AuthController();
+    $auth = new authController();
     $user = $auth->login($username, $password, $role);
 
-    if ($user) {
+    if (is_string($user)) {
+        // Suspended message or custom error
+        $message = $user;
+    } elseif ($user) {
         $_SESSION['userid'] = $user->userid;
         $_SESSION['username'] = $user->username;
         $_SESSION['role'] = $user->role;
@@ -30,12 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'Manager':
                 header("Location: Boundary/manager/managerDashboard.php");
                 break;
-            default:
-                header("Location: login.php");
         }
         exit();
     } else {
-        $message = "Invalid credentials.";
+        $message = "Invalid username or password.";
     }
 }
 ?>
@@ -43,40 +44,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Login - Black&Yellow</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-    <div class="topbar">
-        <a href="login.php" style="color: #FFD700; text-decoration: none;">Login</a>
-    </div>
 
-    <div class="logo">
-        <img src="assets/images/logo.jpg" alt="Logo">
-    </div>
+<!-- Topbar -->
+<div class="topbar">
+    <a href="login.php" style="color: #FFD700; text-decoration: none;">Login</a>
+</div>
 
-    <div class="register-box">
-        <h2>Login</h2>
-        <?php if (!empty($message)) echo "<p class='error'>$message</p>"; ?>
+<!-- Logo -->
+<div class="logo">
+    <img src="assets/images/logo.jpg" alt="Logo">
+</div>
 
-        <form method="POST">
-            <label>User Type:</label>
-            <select name="role" required>
-                <option value="Admin">Admin</option>
-                <option value="Cleaner">Cleaner</option>
-                <option value="Homeowner">Homeowner</option>
-                <option value="Manager">Manager</option>
-            </select>
+<!-- Login Form -->
+<div class="register-box">
+    <h2>Login</h2>
+    <?php if (!empty($message)) echo "<p class='error'>$message</p>"; ?>
 
-            <label>Username:</label>
-            <input type="text" name="username" required>
+    <form method="POST">
+        <label>User Type:</label>
+        <select name="role" required>
+            <option value="Admin">Admin</option>
+            <option value="Cleaner">Cleaner</option>
+            <option value="Homeowner">Homeowner</option>
+            <option value="Manager">Manager</option>
+        </select>
 
-            <label>Password:</label>
-            <input type="password" name="password" required>
+        <label>Username:</label>
+        <input type="text" name="username" required>
 
-            <button type="submit">Login</button>
-            <a href="Boundary/admin/registerUser.php"><button type="button">Register</button></a>
-        </form>
-    </div>
+        <label>Password:</label>
+        <input type="password" name="password" required>
+
+        <button type="submit">Login</button>
+        <a href="Boundary/admin/createUserAccountUI.php"><button type="button">Register</button></a>
+    </form>
+</div>
+
 </body>
 </html>
