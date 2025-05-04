@@ -1,27 +1,28 @@
 <?php
-require_once 'db/Database.php';
-require_once 'Entity/user/user.php';
+require_once __DIR__ . '/../../db/Database.php';
 
 class authController {
-    public function login($username, $password, $role) {
-        $conn = Database::connect();
+    private $conn;
 
-        $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND role = ?");
+    public function __construct() {
+        $this->conn = Database::getConnection();
+    }
+
+    public function login($username, $password, $role) {
+        $stmt = $this->conn->prepare("SELECT * FROM users WHERE username = ? AND role = ?");
         $stmt->bind_param("ss", $username, $role);
         $stmt->execute();
         $result = $stmt->get_result();
 
-        if ($row = $result->fetch_assoc()) {
-            if ($row['status'] === 'suspended') {
-                return "Your account has been suspended.";
+        if ($user = $result->fetch_object()) {
+            // ✅ Use password_verify here
+            if (password_verify($password, $user->password)) {
+                return $user;
+            } else {
+                return false; // invalid password
             }
-
-            if (password_verify($password, $row['password'])) {
-                return new User($row['userid'], $row['username'], $row['email'], $row['password'], $row['role']);
-            }
+        } else {
+            return false; // user not found
         }
-
-        return null; // Invalid credentials
     }
 }
-?>

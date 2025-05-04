@@ -1,9 +1,8 @@
 -- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
---
 -- Host: 127.0.0.1
--- Generation Time: May 03, 2025 at 07:05 PM
+-- Generation Time: May 03, 2025
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -11,88 +10,25 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Database: `cleaning_platform`
---
+CREATE DATABASE IF NOT EXISTS cleaning_platform;
+USE cleaning_platform;
 
 -- --------------------------------------------------------
-
---
--- Table structure for table `match_history`
---
-
-CREATE TABLE `match_history` (
-  `matchid` int(11) NOT NULL,
-  `cleanerid` int(11) DEFAULT NULL,
-  `homeownerid` int(11) DEFAULT NULL,
-  `serviceid` int(11) DEFAULT NULL,
-  `match_date` date DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `services`
---
-
-CREATE TABLE `services` (
-  `serviceid` int(11) NOT NULL,
-  `cleanerid` int(11) NOT NULL,
-  `categoryid` int(11) NOT NULL,
-  `title` varchar(100) DEFAULT NULL,
-  `description` text DEFAULT NULL,
-  `price` decimal(10,2) DEFAULT NULL,
-  `availability` varchar(100) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `service_categories`
---
-
-CREATE TABLE `service_categories` (
-  `categoryid` int(11) NOT NULL,
-  `name` varchar(100) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `shortlists`
---
-
-CREATE TABLE `shortlists` (
-  `shortlistid` int(11) NOT NULL,
-  `homeownerid` int(11) DEFAULT NULL,
-  `cleanerid` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `users`
---
+-- --------------------------------------------------------
 
 CREATE TABLE `users` (
-  `userid` int(11) NOT NULL,
+  `userid` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(100) NOT NULL,
   `email` varchar(150) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` varchar(20) NOT NULL,
-  `status` varchar(20) NOT NULL DEFAULT 'active'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `status` varchar(20) NOT NULL DEFAULT 'active',
+  PRIMARY KEY (`userid`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
---
--- Dumping data for table `users`
---
-
+-- Sample users (can be removed or edited)
 INSERT INTO `users` (`userid`, `username`, `email`, `password`, `role`, `status`) VALUES
 (1, 'joonian', 'joonian656@gmail.com', '$2y$10$4VxyHkzWH5cbr7kehXVjzu8LwCyslJgTi91djB9f9Fnb8ogdsQ7Xy', 'Admin', 'suspended'),
 (2, 'admin1', 'admin1@email.com', '$2y$10$baT7Tw5OpYsQ/6QQQAhs2OCkJ8cx0d1NnaYwl3pgCTGFaDxUGoqDO', 'Admin', 'suspended'),
@@ -100,109 +36,70 @@ INSERT INTO `users` (`userid`, `username`, `email`, `password`, `role`, `status`
 (4, 'admin3', 'admin3@email.com', '$2y$10$QzhAfTVkSAdUPI5ENcmXwu2mZHFMfGfxnWoe.01rBcV.Lyq8da9T.', 'Admin', 'active'),
 (5, 'admin4', 'admin4@email.com', '$2y$10$sOCJjWf68vHZjNkWuBWtp.PiNB3f/FDE1mXf92fsoVNqjlqvBnJUC', 'Admin', 'active');
 
---
--- Indexes for dumped tables
---
+-- --------------------------------------------------------
+-- Table structure for table `service_categories`
+-- --------------------------------------------------------
 
---
--- Indexes for table `match_history`
---
-ALTER TABLE `match_history`
-  ADD PRIMARY KEY (`matchid`),
-  ADD KEY `cleanerid` (`cleanerid`),
-  ADD KEY `homeownerid` (`homeownerid`),
-  ADD KEY `serviceid` (`serviceid`);
+CREATE TABLE `service_categories` (
+  `categoryid` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  PRIMARY KEY (`categoryid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
---
--- Indexes for table `services`
---
-ALTER TABLE `services`
-  ADD PRIMARY KEY (`serviceid`),
-  ADD KEY `cleanerid` (`cleanerid`),
-  ADD KEY `categoryid` (`categoryid`);
+-- Sample categories
+INSERT INTO `service_categories` (`name`) VALUES
+('All-in-one'), ('Floor'), ('Laundry'), ('Toilet'), ('Window');
 
---
--- Indexes for table `service_categories`
---
-ALTER TABLE `service_categories`
-  ADD PRIMARY KEY (`categoryid`);
+-- --------------------------------------------------------
+-- Table structure for table `services`
+-- --------------------------------------------------------
 
---
--- Indexes for table `shortlists`
---
-ALTER TABLE `shortlists`
-  ADD PRIMARY KEY (`shortlistid`),
-  ADD KEY `homeownerid` (`homeownerid`),
-  ADD KEY `cleanerid` (`cleanerid`);
+CREATE TABLE `services` (
+  `serviceid` int(11) NOT NULL AUTO_INCREMENT,
+  `cleanerid` int(11) NOT NULL,
+  `title` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `price` decimal(10,2) DEFAULT NULL,
+  `available_from` TIME NOT NULL,
+  `available_to` TIME NOT NULL,
+  `category` ENUM('All-in-one', 'Floor', 'Laundry', 'Toilet', 'Window') NOT NULL,
+  PRIMARY KEY (`serviceid`),
+  KEY `cleanerid` (`cleanerid`),
+  CONSTRAINT `services_ibfk_1` FOREIGN KEY (`cleanerid`) REFERENCES `users` (`userid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`userid`),
-  ADD UNIQUE KEY `email` (`email`);
+-- --------------------------------------------------------
+-- Table structure for table `shortlists`
+-- --------------------------------------------------------
 
---
--- AUTO_INCREMENT for dumped tables
---
+CREATE TABLE `shortlists` (
+  `shortlistid` int(11) NOT NULL AUTO_INCREMENT,
+  `homeownerid` int(11) DEFAULT NULL,
+  `cleanerid` int(11) DEFAULT NULL,
+  PRIMARY KEY (`shortlistid`),
+  KEY `homeownerid` (`homeownerid`),
+  KEY `cleanerid` (`cleanerid`),
+  CONSTRAINT `shortlists_ibfk_1` FOREIGN KEY (`homeownerid`) REFERENCES `users` (`userid`),
+  CONSTRAINT `shortlists_ibfk_2` FOREIGN KEY (`cleanerid`) REFERENCES `users` (`userid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
---
--- AUTO_INCREMENT for table `match_history`
---
-ALTER TABLE `match_history`
-  MODIFY `matchid` int(11) NOT NULL AUTO_INCREMENT;
+-- --------------------------------------------------------
+-- Table structure for table `match_history`
+-- --------------------------------------------------------
 
---
--- AUTO_INCREMENT for table `services`
---
-ALTER TABLE `services`
-  MODIFY `serviceid` int(11) NOT NULL AUTO_INCREMENT;
+CREATE TABLE `match_history` (
+  `matchid` int(11) NOT NULL AUTO_INCREMENT,
+  `cleanerid` int(11) DEFAULT NULL,
+  `homeownerid` int(11) DEFAULT NULL,
+  `serviceid` int(11) DEFAULT NULL,
+  `match_date` date DEFAULT NULL,
+  PRIMARY KEY (`matchid`),
+  KEY `cleanerid` (`cleanerid`),
+  KEY `homeownerid` (`homeownerid`),
+  KEY `serviceid` (`serviceid`),
+  CONSTRAINT `match_history_ibfk_1` FOREIGN KEY (`cleanerid`) REFERENCES `users` (`userid`),
+  CONSTRAINT `match_history_ibfk_2` FOREIGN KEY (`homeownerid`) REFERENCES `users` (`userid`),
+  CONSTRAINT `match_history_ibfk_3` FOREIGN KEY (`serviceid`) REFERENCES `services` (`serviceid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
---
--- AUTO_INCREMENT for table `service_categories`
---
-ALTER TABLE `service_categories`
-  MODIFY `categoryid` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `shortlists`
---
-ALTER TABLE `shortlists`
-  MODIFY `shortlistid` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `userid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `match_history`
---
-ALTER TABLE `match_history`
-  ADD CONSTRAINT `match_history_ibfk_1` FOREIGN KEY (`cleanerid`) REFERENCES `users` (`userid`),
-  ADD CONSTRAINT `match_history_ibfk_2` FOREIGN KEY (`homeownerid`) REFERENCES `users` (`userid`),
-  ADD CONSTRAINT `match_history_ibfk_3` FOREIGN KEY (`serviceid`) REFERENCES `services` (`serviceid`);
-
---
--- Constraints for table `services`
---
-ALTER TABLE `services`
-  ADD CONSTRAINT `services_ibfk_1` FOREIGN KEY (`cleanerid`) REFERENCES `users` (`userid`),
-  ADD CONSTRAINT `services_ibfk_2` FOREIGN KEY (`categoryid`) REFERENCES `service_categories` (`categoryid`);
-
---
--- Constraints for table `shortlists`
---
-ALTER TABLE `shortlists`
-  ADD CONSTRAINT `shortlists_ibfk_1` FOREIGN KEY (`homeownerid`) REFERENCES `users` (`userid`),
-  ADD CONSTRAINT `shortlists_ibfk_2` FOREIGN KEY (`cleanerid`) REFERENCES `users` (`userid`);
 COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
