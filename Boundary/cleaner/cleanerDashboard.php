@@ -26,7 +26,7 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'Cleaner') {
     <a href="#">Home</a>
     <a href="serviceListings.php">Service Listings</a>
     <a href="#">Jobs History</a>
-    <a href="logout.php">Logout</a>
+    <a href="../../logout.php">Logout</a>
 </div>
 
 <!-- Dashboard content -->

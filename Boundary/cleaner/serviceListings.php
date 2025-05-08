@@ -28,7 +28,7 @@ $services = getServicesByCleaner($_SESSION['userid']);
     <a href="cleanerDashboard.php">Home</a>
     <a href="serviceListings.php">Service Listings</a>
     <a href="searchService.php">Search</a>
-    <a href="createService.php">Create</a>
+    <a href="createService.php">Create New Service</a>
     <a href="../../logout.php">Logout</a>
 </div>
 
