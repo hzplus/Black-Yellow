@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 04, 2025 at 04:38 PM
+-- Generation Time: May 08, 2025 at 08:39 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -47,22 +47,21 @@ CREATE TABLE `services` (
   `title` varchar(100) DEFAULT NULL,
   `description` text DEFAULT NULL,
   `price` decimal(10,2) DEFAULT NULL,
-  `available_from` datetime NOT NULL,
-  `available_to` datetime NOT NULL,
   `category` enum('All-in-one','Floor','Laundry','Toilet','Window') NOT NULL,
   `view_count` int(11) DEFAULT 0,
   `shortlist_count` int(11) DEFAULT 0,
-  `image_path` varchar(255) DEFAULT NULL
+  `image_path` varchar(255) DEFAULT NULL,
+  `availability` enum('Mon-Fri 9AM-12PM','Mon-Fri 12PM-3PM','Mon-Fri 3PM-6PM','Weekend 9AM-12PM','Weekend 12PM-3PM','Weekend 3PM-6PM','Flexible') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `services`
 --
 
-INSERT INTO `services` (`serviceid`, `cleanerid`, `title`, `description`, `price`, `available_from`, `available_to`, `category`, `view_count`, `shortlist_count`, `image_path`) VALUES
-(2, 6, 'waxonwaxoff', 'waxonwaxoff', 1000.00, '2025-05-04 18:49:00', '2025-05-06 18:49:00', 'Floor', 0, 0, NULL),
-(8, 6, 'ss', 'ss', 111.00, '2025-05-06 00:00:00', '2025-05-07 00:00:00', 'All-in-one', 0, 0, NULL),
-(9, 6, 'Wax on Wax off', 'a', 1000.00, '2025-05-04 00:00:00', '2025-05-10 00:00:00', 'Floor', 0, 0, 'assets/images/68176e27f3b10_waxonwaxoff.png');
+INSERT INTO `services` (`serviceid`, `cleanerid`, `title`, `description`, `price`, `category`, `view_count`, `shortlist_count`, `image_path`, `availability`) VALUES
+(2, 6, 'waxonwaxoff', 'waxonwaxoff', 1000.00, 'Floor', 0, 0, NULL, 'Mon-Fri 9AM-12PM'),
+(8, 6, 'ss', 'ss', 111.00, 'All-in-one', 0, 0, NULL, 'Mon-Fri 9AM-12PM'),
+(9, 6, 'Wax on Wax off', 'a', 1000.00, 'Floor', 0, 0, 'assets/images/68176e27f3b10_waxonwaxoff.png', 'Mon-Fri 9AM-12PM');
 
 -- --------------------------------------------------------
 
@@ -123,7 +122,8 @@ INSERT INTO `users` (`userid`, `username`, `email`, `password`, `role`, `status`
 (3, 'admin2', 'admin2@email.com', '$2y$10$q0OXMreJhU/GKvxFH8iGTu554cPIPvfALLfAU4xdMa0HmDWuVWvxi', 'Admin', 'suspended'),
 (4, 'admin3', 'admin3@email.com', '$2y$10$QzhAfTVkSAdUPI5ENcmXwu2mZHFMfGfxnWoe.01rBcV.Lyq8da9T.', 'Admin', 'active'),
 (5, 'admin4', 'admin4@email.com', '$2y$10$sOCJjWf68vHZjNkWuBWtp.PiNB3f/FDE1mXf92fsoVNqjlqvBnJUC', 'Admin', 'active'),
-(6, 'cleaner', 'cleaner@gmail.com', '$2y$10$/zfv1vdwwyBbrZEcc6Es1e7t6WESTh.13.Vo6prb5lAoytNHa7ds2', 'Cleaner', 'active');
+(6, 'cleaner', 'cleaner@gmail.com', '$2y$10$/zfv1vdwwyBbrZEcc6Es1e7t6WESTh.13.Vo6prb5lAoytNHa7ds2', 'Cleaner', 'active'),
+(7, 'cleaner2', 'cleaner2@gmail.com', '$2y$10$Q6tPaFl17jCM3We/xxnrduEw8P1quLaEq1kiN5/up0shSLCO.iFle', 'Cleaner', 'active');
 
 --
 -- Indexes for dumped tables
@@ -198,7 +198,7 @@ ALTER TABLE `shortlists`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `userid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `userid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Constraints for dumped tables
