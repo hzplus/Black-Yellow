@@ -1,10 +1,24 @@
 <?php
 session_start();
-if (!isset($_SESSION['view_service'])) {
-    die("No service data found.");
+if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'Cleaner') {
+    header("Location: ../../login.php");
+    exit();
 }
-$service = $_SESSION['view_service'];
-unset($_SESSION['view_service']); // clear after use
+
+require_once(__DIR__ . '/../../Controller/cleaner/viewServiceController.php');
+
+if (!isset($_GET['serviceid'])) {
+    echo "No service selected.";
+    exit();
+}
+
+$serviceid = $_GET['serviceid'];
+$service = ViewServiceController::getServiceDetails($serviceid);
+
+if (!$service) {
+    echo "Service not found.";
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -18,40 +32,33 @@ unset($_SESSION['view_service']); // clear after use
 
 <div class="topbar">
     <img src="../../assets/images/logo.jpg" alt="Logo">
-    <div>Welcome <?php echo htmlspecialchars($_SESSION['username']); ?>!</div>
+    <div>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</div>
 </div>
 
 <div class="navbar">
     <a href="cleanerDashboard.php">Home</a>
     <a href="serviceListings.php">Service Listings</a>
-    <a href="#">History</a>
+    <a href="searchService.php">Search</a>
     <a href="../../logout.php">Logout</a>
 </div>
 
-<div class="dashboard" style="text-align:center;">
-    <div style="background-color:#dcdcdc; padding:20px; width:400px; margin:auto; border-radius:6px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-            <a href="serviceListings.php"><button>Back</button></a>
-            <div>
-                <button disabled>View Count: <?php echo $service['view_count']; ?></button>
-                <button disabled>Shortlist Count: <?php echo $service['shortlist_count']; ?></button>
-            </div>
-        </div>
-
+<div class="dashboard">
+    <h2>Service Details</h2>
+    <div class="service-detail-card">
         <h3><?php echo htmlspecialchars($service['title']); ?></h3>
-        <p><strong>Price:</strong> $<?php echo $service['price']; ?></p>
-        <p><strong>Description:</strong> <?php echo htmlspecialchars($service['description']); ?></p>
+        <p><?php echo htmlspecialchars($service['description']); ?></p>
+        <p><strong>Price:</strong> $<?php echo htmlspecialchars($service['price']); ?></p>
+        <p><strong>Availability:</strong> <?php echo htmlspecialchars($service['availability']); ?></p>
+        <p><strong>Category:</strong> <?php echo htmlspecialchars($service['category']); ?></p>
+        <?php if (!empty($service['image_path'])): ?>
+            <img src="../../<?php echo htmlspecialchars($service['image_path']); ?>" width="200">
+        <?php endif; ?>
 
-        <?php if ($service['image_path']) { ?>
-            <img src="../../<?php echo htmlspecialchars($service['image_path']); ?>" alt="Service Image" style="width:200px; height:auto; margin:10px auto;">
-        <?php } else { ?>
-            <div style="width:200px; height:120px; background:white; margin:auto;">No Image</div>
-        <?php } ?>
-
-        <div style="margin-top:20px;">
-            <button style="background-color:#FFD700; color:black;">Edit Service</button>
-            <button style="background-color:#FFD700; color:black; ">Remove Service</button>
+        <div style="margin-top: 20px;">
+            <a href="editService.php?serviceid=<?= $serviceid ?>" class="button">Edit</a>
+            <a href="removeService.php?serviceid=<?= $serviceid ?>" class="button" onclick="return confirm('Are you sure you want to delete this service?');">Remove</a>
         </div>
+
     </div>
 </div>
 

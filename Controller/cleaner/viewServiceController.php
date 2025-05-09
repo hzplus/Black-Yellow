@@ -1,19 +1,9 @@
 <?php
-require_once '../../Entity/service.php';
+require_once(__DIR__ . '/../../Entity/service.php');
 
-if (!isset($_GET['serviceid'])) {
-    die("Service ID missing.");
+class ViewServiceController {
+    public static function getServiceDetails($serviceid) {
+        $serviceObj = new CleanerService(null, null, null, null, null, null);
+        return $serviceObj->getServiceById($serviceid);
+    }
 }
-
-$serviceid = intval($_GET['serviceid']);
-$service = getServiceById($serviceid);
-
-if (!$service) {
-    die("Service not found.");
-}
-
-session_start();
-$_SESSION['view_service'] = $service;
-
-header("Location: ../../Boundary/cleaner/viewService.php");
-exit();

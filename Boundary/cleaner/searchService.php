@@ -5,9 +5,15 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'Cleaner') {
     exit();
 }
 
-$services = $_SESSION['search_results'] ?? [];
-$keyword = $_SESSION['search_keyword'] ?? '';
-unset($_SESSION['search_results'], $_SESSION['search_keyword']);
+require_once(__DIR__ . '/../../Controller/cleaner/searchServiceController.php');
+
+$cleanerId = $_SESSION['userid'];
+$keyword = $_GET['keyword'] ?? '';
+$services = [];
+
+if (!empty($keyword)) {
+    $services = SearchServiceController::search($cleanerId, $keyword);
+}
 ?>
 
 <!DOCTYPE html>
@@ -19,39 +25,34 @@ unset($_SESSION['search_results'], $_SESSION['search_keyword']);
 </head>
 <body>
 
-<!-- Topbar -->
 <div class="topbar">
     <img src="../../assets/images/logo.jpg" alt="Logo">
     <div>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</div>
 </div>
 
-<!-- Navbar -->
 <div class="navbar">
     <a href="cleanerDashboard.php">Home</a>
     <a href="serviceListings.php">Service Listings</a>
-    <a href="createService.php">Create</a>
+    <a href="searchService.php">Search</a>
+    <a href="createService.php">Create New Service</a>
     <a href="../../logout.php">Logout</a>
 </div>
 
-<!-- Page Title -->
-<div class="dashboard">
-    <h1>Search Services</h1>
-
-    <!-- Search Form -->
-    <form action="../../Controller/cleaner/searchServiceController.php" method="POST">
-        <input type="text" name="keyword" placeholder="Enter service title..." required value="<?php echo htmlspecialchars($keyword); ?>">
+<div class="services-section">
+    <h2>Search Your Services</h2>
+    <form method="GET" action="searchService.php">
+        <input type="text" name="keyword" placeholder="Search by title or category..." value="<?= htmlspecialchars($keyword) ?>" required>
         <button type="submit">Search</button>
     </form>
 
-    <!-- Search Results -->
     <div class="service-cards">
         <?php if (!empty($services)) {
             foreach ($services as $service) { ?>
-                <div class="service-card" onclick="location.href='../../Controller/cleaner/viewServiceController.php?serviceid=<?= $service['serviceid'] ?>'">
+                <div class="service-card" onclick="location.href='viewService.php?serviceid=<?= $service['serviceid'] ?>'">
                     <?= htmlspecialchars($service['title']) ?>
                 </div>
         <?php }} elseif (!empty($keyword)) { ?>
-            <p>No services found for "<?php echo htmlspecialchars($keyword); ?>"</p>
+            <p>No results found for "<?= htmlspecialchars($keyword) ?>".</p>
         <?php } ?>
     </div>
 </div>

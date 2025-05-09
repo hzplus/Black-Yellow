@@ -4,8 +4,11 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'Cleaner') {
     header("Location: ../../login.php");
     exit();
 }
-require_once '../../Entity/service.php';
-$services = getServicesByCleaner($_SESSION['userid']);
+
+require_once(__DIR__ . '/../../Controller/cleaner/serviceController.php');
+
+$cleanerId = $_SESSION['userid'];
+$services = ServiceController::getCleanerServices($cleanerId);
 ?>
 
 <!DOCTYPE html>
@@ -38,7 +41,7 @@ $services = getServicesByCleaner($_SESSION['userid']);
     <div class="service-cards">
         <?php if (!empty($services)) {
             foreach ($services as $service) { ?>
-                <div class="service-card" onclick="location.href='../../Controller/cleaner/viewServiceController.php?serviceid=<?= $service['serviceid'] ?>'">
+                <div class="service-card" onclick="location.href='viewService.php?serviceid=<?= $service['serviceid'] ?>'">
                     <?= htmlspecialchars($service['title']) ?>
                 </div>
         <?php }} else { ?>

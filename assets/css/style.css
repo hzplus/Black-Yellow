@@ -173,3 +173,17 @@ button {
     transform: scale(1.05);
     background-color: #c0c0c0;
 }
+
+.button {
+    display: inline-block;
+    padding: 8px 14px;
+    margin-right: 10px;
+    background-color: #337ab7;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.button:hover {
+    background-color: #23527c;
+}

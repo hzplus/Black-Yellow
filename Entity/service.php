@@ -1,47 +1,85 @@
 <?php
 require_once __DIR__ . '/../db/Database.php';
 
-function getServicesByCleaner($cleanerId) {
-    $conn = Database::getConnection();
-    $stmt = $conn->prepare("SELECT * FROM services WHERE cleanerid = ?");
-    $stmt->bind_param("i", $cleanerId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $services = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-    return $services;
-}
+class CleanerService {
 
-function createService($cleanerId, $title, $description, $price, $available_from, $available_to, $category, $image_path) {
-    $conn = Database::getConnection();
-    $stmt = $conn->prepare("INSERT INTO services (cleanerid, title, description, price, available_from, available_to, category, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("issdssss", $cleanerId, $title, $description, $price, $available_from, $available_to, $category, $image_path);
-    $success = $stmt->execute();
-    $stmt->close();
-    return $success;
-}
+    public $serviceId;
+    public $cleanerId;
+    public $serviceType;
+    public $price;
+    public $description;
+    public $availability;
 
-function searchServicesByTitle($cleanerid, $keyword) {
-    $conn = Database::getConnection();
-    $keyword = "%" . $keyword . "%";
-    $stmt = $conn->prepare("SELECT * FROM services WHERE cleanerid = ? AND (title LIKE ? OR category LIKE ?)");
-    $stmt->bind_param("iss", $cleanerid, $keyword, $keyword);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $services = $result->fetch_all(MYSQLI_ASSOC);
-    $stmt->close();
-    return $services;
-}
+    public function __construct($serviceId, $cleanerId, $serviceType, $price, $description, $availability) {
+        $this->serviceId = $serviceId;
+        $this->cleanerId = $cleanerId;
+        $this->serviceType = $serviceType;
+        $this->price = $price;
+        $this->description = $description;
+        $this->availability = $availability;
+    }
 
-function getServiceById($serviceid) {
-    $conn = Database::getConnection();
-    $stmt = $conn->prepare("SELECT * FROM services WHERE serviceid = ?");
-    $stmt->bind_param("i", $serviceid);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $service = $result->fetch_assoc();
-    $stmt->close();
-    return $service;
-}
+    function getServicesByCleaner($cleanerId) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("SELECT * FROM services WHERE cleanerid = ?");
+        $stmt->bind_param("i", $cleanerId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $services = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        return $services;
+    }
 
+    function createService($cleanerId, $title, $description, $price, $availability, $category, $image_path) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("INSERT INTO services (cleanerid, title, description, price, availability, category, image_path) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("issdsss", $cleanerId, $title, $description, $price, $availability, $category, $image_path);
+        $success = $stmt->execute();
+        $stmt->close();
+        return $success;
+    }
+    
+
+    function searchServicesByTitle($cleanerid, $keyword) {
+        $conn = Database::getConnection();
+        $keyword = "%" . $keyword . "%";
+        $stmt = $conn->prepare("SELECT * FROM services WHERE cleanerid = ? AND (title LIKE ? OR category LIKE ?)");
+        $stmt->bind_param("iss", $cleanerid, $keyword, $keyword);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $services = $result->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+        return $services;
+    }
+
+    function getServiceById($serviceid) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("SELECT * FROM services WHERE serviceid = ?");
+        $stmt->bind_param("i", $serviceid);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $service = $result->fetch_assoc();
+        $stmt->close();
+        return $service;
+    }
+
+     function updateService($serviceid, $title, $description, $price, $availability, $category, $image_path) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("UPDATE services SET title = ?, description = ?, price = ?, availability = ?, category = ?, image_path = ? WHERE serviceid = ?");
+        $stmt->bind_param("ssdsssi", $title, $description, $price, $availability, $category, $image_path, $serviceid);
+        $success = $stmt->execute();
+        $stmt->close();
+        return $success;
+    }
+    
+    function deleteService($serviceid) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("DELETE FROM services WHERE serviceid = ?");
+        $stmt->bind_param("i", $serviceid);
+        $success = $stmt->execute();
+        $stmt->close();
+        return $success;
+    }
+    
+}
 ?>
