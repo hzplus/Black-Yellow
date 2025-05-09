@@ -112,3 +112,25 @@ button {
 .dashboard p {
     font-size: 18px;
 }
+
+/* ===== NEW FORM & LABEL ADJUSTMENTS ===== */
+
+/* Shorten form fields within two-column grids */
+.form-grid input,
+.form-grid select {
+    width: 80%;
+    max-width: 280px;
+}
+
+/* If you have textareas in the form */
+.form-grid textarea {
+    width: 80%;
+    max-width: 280px;
+}
+
+
+.dashboard-content label {
+    color: #fdfdfd;
+}
+
+

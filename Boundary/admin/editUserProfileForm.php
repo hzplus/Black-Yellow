@@ -7,14 +7,13 @@ if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Admin') {
     exit();
 }
 
-$controller = new editUserProfileController();
-
 if (!isset($_GET['profile_id'])) {
     echo "No profile ID provided.";
     exit();
 }
 
-$profileId = $_GET['profile_id'];
+$controller = new editUserProfileController();
+$profileId = (int)$_GET['profile_id'];
 $profile = $controller->getProfileById($profileId);
 
 if (!$profile) {
@@ -27,10 +26,13 @@ $message = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role = $_POST['role'];
     $description = $_POST['description'];
+    $status = $_POST['status'];
 
-    $success = $controller->updateProfile($profileId, $role, $description);
+    $success = $controller->updateProfile($profileId, $role, $description, $status);
     $message = $success ? "✅ Profile updated successfully!" : "❌ Failed to update profile.";
-    $profile = $controller->getProfileById($profileId); // Refresh updated info
+
+    // Refresh updated profile data
+    $profile = $controller->getProfileById($profileId);
 }
 ?>
 
@@ -42,21 +44,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
+<!-- Topbar -->
 <div class="topbar">
     Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!
     <a href="../../logout.php" class="logout-link">Logout</a>
 </div>
 
+<!-- Logo -->
 <div class="logo">
     <img src="../../assets/images/logo.jpg" alt="Logo">
 </div>
 
+<!-- Navbar -->
 <div class="navbar">
     <a href="adminDashboard.php">Home</a>
     <a href="userAccountsMenu.php">User Accounts</a>
     <a href="userProfilesMenu.php">User Profiles</a>
 </div>
 
+<!-- Main Content -->
 <div class="dashboard-content">
     <h1>Edit User Profile: <?= htmlspecialchars($profile->role) ?></h1>
 
@@ -65,19 +71,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form method="POST">
-        <label>Role:</label>
-        <input type="text" name="role" value="<?= htmlspecialchars($profile->role) ?>" required>
+        <label for="role">Role:</label><br>
+        <input type="text" id="role" name="role" value="<?= htmlspecialchars($profile->role) ?>" required><br><br>
 
-        <label>Description:</label>
-        <textarea name="description" rows="4" required><?= htmlspecialchars($profile->description) ?></textarea>
+        <label for="description">Description:</label><br>
+        <textarea id="description" name="description" rows="4" required><?= htmlspecialchars($profile->description) ?></textarea><br><br>
 
-        <br><br>
+        <label for="status">Status:</label><br>
+        <select id="status" name="status" required>
+        <option value="active" <?= $profile->status === 'active' ? 'selected' : '' ?>>active</option>
+        <option value="suspended" <?= $profile->status === 'suspended' ? 'selected' : '' ?>>suspended</option>
+        </select><br><br>
+
         <button type="submit">Update Profile</button>
-        <a href="editUserProfiles.php"><button type="button">Back</button></a>
-
+        <button type="button" onclick="location.href='editUserProfiles.php'">🔙 Back</button>
     </form>
 </div>
-        <a href="userProfilesMenu.php"><button type="button">Back</button></a>
 
 </body>
 </html>

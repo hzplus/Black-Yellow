@@ -43,30 +43,33 @@ $profiles = $controller->getAllProfiles(); // fetch all user profiles
     <input type="text" id="searchBox" placeholder="Search by role..." onkeyup="filterProfiles()">
 
     <table border="1" cellpadding="10" cellspacing="0" id="profileTable">
-        <thead>
-            <tr>
-                <th>Profile ID</th>
-                <th>Role</th>
-                <th>Description</th>
-                <th>Status</th>
+    <thead>
+    <tr>
+        <th>Profile ID</th>
+        <th>Role</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Action</th> <!-- ✅ New column for Edit button -->
+    </tr>
+</thead>
+<tbody>
+    <?php if (empty($profiles)): ?>
+        <tr><td colspan="5">No user profiles found.</td></tr> <!-- ✅ Updated colspan -->
+    <?php else: ?>
+        <?php foreach ($profiles as $profile): ?>
+            <tr class="profile-row" data-role="<?= htmlspecialchars($profile->role) ?>">
+                <td><?= htmlspecialchars($profile->profile_id) ?></td>
+                <td><?= htmlspecialchars($profile->role) ?></td>
+                <td><?= htmlspecialchars($profile->description) ?></td>
+                <td><?= htmlspecialchars($profile->status) ?></td>
+                <td>
+                    <a href="editUserProfileForm.php?profile_id=<?= $profile->profile_id ?>" class="button">Edit</a>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            <?php if (empty($profiles)): ?>
-                <tr><td colspan="4">No user profiles found.</td></tr>
-            <?php else: ?>
-                <?php foreach ($profiles as $profile): ?>
-                    <tr class="profile-row" data-role="<?= htmlspecialchars($profile->role) ?>">
-                        <td><?= htmlspecialchars($profile->profileId) ?></td>
-                        <td><?= htmlspecialchars($profile->role) ?></td>
-                        <td><?= htmlspecialchars($profile->description) ?></td>
-                        <td><?= htmlspecialchars($profile->status) ?></td>
-                        <td><a href="editUserProfileForm.php?profile_id=<?= $profile->profileId ?>" class="button">Edit</a></td>
-                        
-                    </tr>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </tbody>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</tbody>
+
     </table>
 
     <p id="noResultsMessage" style="display:none; color: red;">No matching profiles found.</p>
@@ -96,3 +99,11 @@ function filterProfiles() {
 <a href="userProfilesMenu.php"><button type="button">Back</button></a>
 
 </html>
+
+<style>
+  
+  #searchBox {
+    width: 300px;
+    max-width: 100%;
+  }
+</style>

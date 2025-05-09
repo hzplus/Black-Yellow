@@ -1,20 +1,17 @@
 <?php
-require_once '../../db/database.php';
-require_once '../../Entity/userProfile.php';
+require_once __DIR__ . '/../../Entity/userProfile.php';
 
 class editUserProfileController {
-    public function getAllProfiles() {
-        $conn = Database::connect();
-        return userProfile::getAllProfiles($conn);
+
+    public function getAllProfiles(): array {
+        return userProfile::getAll();
     }
 
-    public function getProfileById($id) {
-        $conn = Database::connect();
-        return userProfile::getById($conn, $id);
+    public function getProfileById(int $id): ?userProfile {
+        return userProfile::getById($id);
     }
 
-    public function updateProfile($id, $role, $description) {
-        $conn = Database::connect();
-        return userProfile::update($conn, $id, $role, $description);
+    public function updateProfile(int $id, string $role, string $description, string $status): bool {
+        return userProfile::update($id, $role, $description, $status);
     }
 }

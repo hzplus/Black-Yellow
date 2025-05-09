@@ -10,7 +10,7 @@ if (!isset($_SESSION['username'])) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard - Black&Yellow</title>
+    <title>Platform Manager Dashboard - Black&Yellow</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
 
 
@@ -27,16 +27,16 @@ if (!isset($_SESSION['username'])) {
 
 <!-- Navigation bar -->
 <div class="navbar">
-    <a href="adminDashboard.php">Home</a>
-    <a href="userAccountsMenu.php">User Accounts</a>
-    <a href="userProfilesMenu.php">User Profiles</a>
+    <a href="platformManagerDashboard.php">Home</a>
+    <a href="platformManagerMenu.php">Service Category</a>
+    <a href="generateReport.php">Reports</a>
     <a href="../../logout.php">Logout</a>
 </div>
 
 <!-- Dashboard content -->
 <div class="dashboard-content">
-    <h1>Admin Dashboard</h1>
-    <p>This is the main control panel for Admin users.</p>
+    <h1>Platform Mangaer Dashboard</h1>
+    <p>This is the main control panel for Platform manager.</p>
 </div>
 
 </body>

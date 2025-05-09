@@ -65,8 +65,8 @@ $profiles = $controller->getActiveProfiles();
                 <?php else: ?>
                     <?php foreach ($profiles as $profile): ?>
                         <tr>
-                            <td><input type="checkbox" name="profile_ids[]" value="<?= $profile->profileId ?>"></td>
-                            <td><?= htmlspecialchars($profile->profileId) ?></td>
+                            <td><input type="checkbox" name="profile_ids[]" value="<?= $profile->profile_id ?>"></td>
+                            <td><?= htmlspecialchars($profile->profile_id) ?></td>
                             <td><?= htmlspecialchars($profile->role) ?></td>
                             <td><?= htmlspecialchars($profile->description) ?></td>
                             <td><?= htmlspecialchars($profile->status) ?></td>

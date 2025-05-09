@@ -1,15 +1,15 @@
 <?php
-require_once '../../db/database.php';
-require_once '../../Entity/userProfile.php';
+require_once __DIR__ . '/../../Entity/userProfile.php';
 
 class suspendUserProfileController {
-    public function getActiveProfiles() {
-        $conn = Database::connect();
-        return userProfile::getActiveProfiles($conn);
+    public function suspend(array $profileIds): void {
+        foreach ($profileIds as $id) {
+            userProfile::suspend((int)$id);
+        }
     }
 
-    public function suspend($ids) {
-        $conn = Database::connect();
-        return userProfile::suspendProfiles($conn, $ids);
+    public function getActiveProfiles(): array {
+        $all = userProfile::getAll();
+        return array_filter($all, fn($p) => $p->status === 'active');
     }
 }

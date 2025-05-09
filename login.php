@@ -28,10 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: Boundary/cleaner/cleanerDashboard.php");
                 break;
             case 'Homeowner':
-                header("Location: Boundary/homeowner/homeownerDashboard.php");
+                header("Location: Boundary/homeowner/homeOwnerDashboard.php");
                 break;
-            case 'Manager':
-                header("Location: Boundary/manager/managerDashboard.php");
+            case 'PlatformManager':
+                header("Location: Boundary/platformManager/platformManagerDashboard.php");
                 break;
         }
         exit();
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <option value="Admin">Admin</option>
             <option value="Cleaner">Cleaner</option>
             <option value="Homeowner">Homeowner</option>
-            <option value="Manager">Manager</option>
+            <option value="PlatformManager">Platform Manager</option>
         </select>
 
         <label>Username:</label>

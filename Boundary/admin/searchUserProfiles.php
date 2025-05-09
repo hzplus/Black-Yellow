@@ -57,7 +57,7 @@ $profiles = $controller->search(""); // show all profiles initially
         <tbody>
             <?php foreach ($profiles as $profile): ?>
                 <tr class="profile-row" data-role="<?= htmlspecialchars($profile->role) ?>" data-description="<?= htmlspecialchars($profile->description) ?>">
-                    <td><?= htmlspecialchars($profile->profileId) ?></td>
+                    <td><?= htmlspecialchars($profile->profile_id) ?></td>
                     <td><?= htmlspecialchars($profile->role) ?></td>
                     <td><?= htmlspecialchars($profile->description) ?></td>
                     <td><?= htmlspecialchars($profile->status) ?></td> 
@@ -91,3 +91,10 @@ function filterProfiles() {
 
 </body>
 </html>
+<style>
+  
+  #searchBox {
+    width: 300px;
+    max-width: 100%;
+  }
+</style>

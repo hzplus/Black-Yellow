@@ -47,13 +47,13 @@ if (!$profile) {
 <div class="dashboard-content">
     <h1>Profile Details</h1>
 
-    <p><strong>Profile ID:</strong> <?= htmlspecialchars($profile->profileId) ?></p>
+    <p><strong>Profile ID:</strong> <?= htmlspecialchars($profile->profile_id) ?></p>
     <p><strong>Role:</strong> <?= htmlspecialchars($profile->role) ?></p>
     <p><strong>Description:</strong> <?= htmlspecialchars($profile->description) ?></p>
-    
 
     <br>
-    <a href="userProfilesMenu.php"><button type="button">Back</button></a></div>
+    <a href="viewUserProfiles.php"><button type="button">Back</button></a>
+</div>
 
 </body>
 </html>

@@ -1,10 +1,8 @@
 <?php
-require_once '../../db/Database.php';
-require_once '../../Entity/userProfile.php';
+require_once __DIR__ . '/../../Entity/userProfile.php';
 
 class searchUserProfileController {
-    public function search($keyword) {
-        $conn = Database::connect();
-        return userProfile::search($conn, $keyword);
+    public function search(string $keyword): array {
+        return userProfile::searchByRole($keyword);
     }
 }

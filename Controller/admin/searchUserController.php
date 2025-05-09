@@ -1,13 +1,20 @@
 <?php
-require_once __DIR__ . '/../../db/database.php';
-require_once __DIR__ . '/../../entity/user/user.php';
 
-class searchUserController {
-    public function search($keyword) {
-        $conn = database::connect();
-        $users = user::search($conn, $keyword);
-        database::disconnect();
-        return $users;
+
+require_once __DIR__ . '/../../entity/user.php';
+
+class searchUserController
+{
+    /**
+     * Return an array of User objects matching $keyword,
+     * or all users if $keyword is empty.
+     *
+     * @param string $keyword
+     * @return User[]
+     */
+    public function search(string $keyword): array
+    {
+        // Delegate entirely to the Entity
+        return User::search($keyword);
     }
 }
-?>

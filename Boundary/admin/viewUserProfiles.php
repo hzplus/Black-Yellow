@@ -54,12 +54,12 @@ $profiles = $controller->getAllProfiles();
         <tbody>
             <?php foreach ($profiles as $profile): ?>
                 <tr>
-                    <td><?= htmlspecialchars($profile->profileId) ?></td>
+                    <td><?= htmlspecialchars($profile->profile_id) ?></td>
                     <td><?= htmlspecialchars($profile->role) ?></td>
                     <td><?= htmlspecialchars($profile->description) ?></td>
                     <td><?= htmlspecialchars($profile->status) ?></td>
                     <td>
-                        <a href="viewUserProfileDetails.php?profile_id=<?= $profile->profileId ?>" class="button">View</a>
+                    <a href="viewUserProfileDetails.php?profile_id=<?= $profile->profile_id ?>">View</a>
                     </td>
                 </tr>
             <?php endforeach; ?>
