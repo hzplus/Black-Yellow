@@ -53,7 +53,7 @@ if (!$service) {
         <?php if (!empty($service['image_path'])): ?>
             <img src="../../<?php echo htmlspecialchars($service['image_path']); ?>" width="200">
         <?php endif; ?>
-
+        <p><strong>Views:</strong> <?= htmlspecialchars($service['view_count']) ?></p>
         <div style="margin-top: 20px;">
             <a href="editService.php?serviceid=<?= $serviceid ?>" class="button">Edit</a>
             <a href="removeService.php?serviceid=<?= $serviceid ?>" class="button" onclick="return confirm('Are you sure you want to delete this service?');">Remove</a>

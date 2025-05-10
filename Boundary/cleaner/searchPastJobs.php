@@ -5,52 +5,38 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'Cleaner') {
     exit();
 }
 
-require_once(__DIR__ . '/../../Controller/cleaner/pastJobsController.php');
+require_once(__DIR__ . '/../../Controller/cleaner/searchPastJobsController.php');
 
 $cleanerId = $_SESSION['userid'];
-$category = $_GET['category'] ?? null;
-$startDate = $_GET['start_date'] ?? null;
-$endDate = $_GET['end_date'] ?? null;
+$keyword = $_GET['keyword'] ?? '';
+// $category = $_GET['category'] ?? null;
+// $startDate = $_GET['start_date'] ?? null;
+// $endDate = $_GET['end_date'] ?? null;
 
-$jobs = PastJobsController::fetchJobs($cleanerId, $category, $startDate, $endDate);
-$allCategories = ['All-in-one', 'Floor', 'Laundry', 'Toilet', 'Window'];
+// $jobs = SearchPastJobsController::search($cleanerId, $keyword, $category, $startDate, $endDate);
+$jobs = SearchPastJobsController::search($cleanerId, $keyword);
+// $allCategories = ['All-in-one', 'Floor', 'Laundry', 'Toilet', 'Window'];
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Past Jobs</title>
+    <title>Search Past Jobs</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th, td {
-            padding: 10px;
-            border-bottom: 1px solid #ccc;
-            text-align: left;
-        }
-
-        .filters {
-            margin-bottom: 20px;
-        }
-
-        .filters label {
-            margin-right: 10px;
-        }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border-bottom: 1px solid #ccc; text-align: left; }
+        .filters { margin-bottom: 20px; }
+        .filters label { margin-right: 10px; }
     </style>
 </head>
 <body>
 
 <div class="topbar">
     <img src="../../assets/images/logo.jpg" alt="Logo">
-    <div>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</div>
+    <div>Welcome, <?= htmlspecialchars($_SESSION['username']); ?>!</div>
 </div>
-
 
 <div class="navbar">
     <a href="cleanerDashboard.php">Home</a>
@@ -62,31 +48,19 @@ $allCategories = ['All-in-one', 'Floor', 'Laundry', 'Toilet', 'Window'];
 
 
 <div class="dashboard">
-    <h2>Confirmed Job History</h2>
+    <h2>Search Past Jobs</h2>
 
     <form method="GET" class="filters">
-        <label>Category:
-            <select name="category">
-                <option value="">All</option>
-                <?php foreach ($allCategories as $cat): ?>
-                    <option value="<?= $cat ?>" <?= $category === $cat ? 'selected' : '' ?>><?= $cat ?></option>
-                <?php endforeach; ?>
-            </select>
+        <label>Search:
+            <input type="text" name="keyword" placeholder="Search by title or category..." value="<?= htmlspecialchars($keyword) ?>">
         </label>
 
-        <label>From:
-            <input type="date" name="start_date" value="<?= htmlspecialchars($startDate) ?>">
-        </label>
-
-        <label>To:
-            <input type="date" name="end_date" value="<?= htmlspecialchars($endDate) ?>">
-        </label>
-
-        <button type="submit">Filter</button>
+        <button type="submit">Search</button>
+        <a href="searchPastJobs.php" class="button" style="margin-left: 10px;">Clear</a>
     </form>
 
     <?php if (empty($jobs)): ?>
-        <p>No past jobs found.</p>
+        <p>No matching past jobs found.</p>
     <?php else: ?>
         <table>
             <thead>
