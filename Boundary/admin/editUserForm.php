@@ -17,7 +17,7 @@ if (!isset($_GET['user_id'])) {
 }
 
 $userId = (int)$_GET['user_id'];
-$user   = $controller->getUser($userId);
+$user   = $controller->getUserById($userId);
 
 if (!$user) {
     echo "User not found.";

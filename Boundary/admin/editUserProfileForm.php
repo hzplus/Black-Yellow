@@ -29,7 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status = $_POST['status'];
 
     $success = $controller->updateProfile($profileId, $role, $description, $status);
-    $message = $success ? "✅ Profile updated successfully!" : "❌ Failed to update profile.";
+    $message = $success
+        ? "✅ Profile updated successfully!"
+        : "❌ Failed to update profile.";
 
     // Refresh updated profile data
     $profile = $controller->getProfileById($profileId);
@@ -39,8 +41,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Edit User Profile</title>
-    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/style.css?v=1.0">
 </head>
 <body>
 
@@ -64,28 +67,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!-- Main Content -->
 <div class="dashboard-content">
+  <div class="card">
     <h1>Edit User Profile: <?= htmlspecialchars($profile->role) ?></h1>
 
     <?php if (!empty($message)): ?>
-        <p><?= $message ?></p>
+      <div class="<?= strpos($message, '❌') === 0 ? 'error' : 'message' ?>">
+        <?= htmlspecialchars($message) ?>
+      </div>
     <?php endif; ?>
 
-    <form method="POST">
-        <label for="role">Role:</label><br>
-        <input type="text" id="role" name="role" value="<?= htmlspecialchars($profile->role) ?>" required><br><br>
+    <form method="POST" class="form-grid">
+      <input type="hidden" name="profile_id" value="<?= htmlspecialchars($profile->profile_id) ?>">
 
-        <label for="description">Description:</label><br>
-        <textarea id="description" name="description" rows="4" required><?= htmlspecialchars($profile->description) ?></textarea><br><br>
+      <div>
+        <label for="role">Role</label><br>
+        <input type="text" id="role" name="role" value="<?= htmlspecialchars($profile->role) ?>" required>
+      </div>
 
-        <label for="status">Status:</label><br>
+      <div class="full-width">
+        <label for="description">Description</label><br>
+        <textarea id="description" name="description" rows="4" required><?= htmlspecialchars($profile->description) ?></textarea>
+      </div>
+
+      <div>
+        <label for="status">Status</label><br>
         <select id="status" name="status" required>
-        <option value="active" <?= $profile->status === 'active' ? 'selected' : '' ?>>active</option>
-        <option value="suspended" <?= $profile->status === 'suspended' ? 'selected' : '' ?>>suspended</option>
-        </select><br><br>
+          <option value="active" <?= $profile->status === 'active' ? 'selected' : '' ?>>Active</option>
+          <option value="suspended" <?= $profile->status === 'suspended' ? 'selected' : '' ?>>Suspended</option>
+        </select>
+      </div>
 
+      <div class="full-width">
         <button type="submit">Update Profile</button>
         <button type="button" onclick="location.href='editUserProfiles.php'">🔙 Back</button>
+      </div>
     </form>
+  </div>
 </div>
 
 </body>

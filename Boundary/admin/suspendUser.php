@@ -94,6 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
       <div class="full-width" style="margin-top:20px;">
         <button type="submit">🛑 Suspend Selected Users</button>
+        <br>
+        <br>
         <button type="button" onclick="location.href='userAccountsMenu.php'">🔙 Back</button>
       </div>
     </form>

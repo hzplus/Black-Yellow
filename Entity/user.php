@@ -182,6 +182,15 @@ class User
         return $users;
     }
 
+    public static function getUserById($id) {
+        $conn = Database::connect();
+        $stmt = $conn->prepare("SELECT * FROM users WHERE userid = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_object(); // return user object
+    }
+
     /**
      * Search users by username or email.
      *

@@ -1,17 +1,15 @@
 <?php
-// Controller/admin/createUserController.php
-
 require_once __DIR__ . '/../../Entity/user.php';
 
-class createUserController
-{
-    public function userExists(string $username, string $email): bool
-    {
-        return User::exists($username, $email);
+class editUserController {
+
+    // Get user details by ID
+    public function getUserById($userId) {
+        return user::getUserById($userId);
     }
 
-    public function createUser(string $username, string $email, string $password, string $role): bool
-    {
-        return User::create($username, $email, $password, $role);
+    // Update user details
+    public function updateUser($userId, $username, $email, $role, $status) {
+        return user::updateUser($userId, $username, $email, $role, $status);
     }
 }
