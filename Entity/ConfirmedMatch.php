@@ -6,21 +6,23 @@ class ConfirmedMatch {
     public $cleanerId;
     public $homeownerId;
     public $serviceId;
-    public $confirmedAt;
+    // public $confirmedAt;
+    public $bookingDate;
 
-    public function __construct($matchId, $cleanerId, $homeownerId, $serviceId, $confirmedAt) {
+    public function __construct($matchId, $cleanerId, $homeownerId, $serviceId, $bookingDate) {
         $this->matchId = $matchId;
         $this->cleanerId = $cleanerId;
         $this->homeownerId = $homeownerId;
         $this->serviceId = $serviceId;
-        $this->confirmedAt = $confirmedAt;
+        // $this->confirmedAt = $confirmedAt;
+        $this->bookingDate = $bookingDate;
     }
 
     public function getConfirmedMatchesByCleaner($cleanerId, $category = null, $startDate = null, $endDate = null) {
         $conn = Database::getConnection();
 
         $query = "
-            SELECT cm.confirmed_at, u.username AS homeowner_name, s.title, s.category
+            SELECT cm.booking_date, u.username AS homeowner_name, s.title, s.category
             FROM confirmed_matches cm
             JOIN services s ON cm.serviceid = s.serviceid
             JOIN users u ON cm.homeownerid = u.userid
@@ -38,18 +40,18 @@ class ConfirmedMatch {
         }
 
         if (!empty($startDate)) {
-            $query .= " AND cm.confirmed_at >= ?";
+            $query .= " AND cm.booking_date >= ?";
             $types .= "s";
             $params[] = $startDate;
         }
 
         if (!empty($endDate)) {
-            $query .= " AND cm.confirmed_at <= ?";
+            $query .= " AND cm.booking_date <= ?";
             $types .= "s";
             $params[] = $endDate;
         }
 
-        $query .= " ORDER BY cm.confirmed_at DESC";
+        $query .= " ORDER BY cm.booking_date DESC";
 
         $stmt = $conn->prepare($query);
         if (!$stmt) {
@@ -69,7 +71,7 @@ class ConfirmedMatch {
         $conn = Database::getConnection();
     
         $query = "
-            SELECT cm.confirmed_at, u.username AS homeowner_name, s.title, s.category
+            SELECT cm.booking_date, u.username AS homeowner_name, s.title, s.category
             FROM confirmed_matches cm
             JOIN services s ON cm.serviceid = s.serviceid
             JOIN users u ON cm.homeownerid = u.userid
@@ -86,18 +88,18 @@ class ConfirmedMatch {
         }
     
         if (!empty($startDate)) {
-            $query .= " AND cm.confirmed_at >= ?";
+            $query .= " AND cm.booking_date >= ?";
             $types .= "s";
             $params[] = $startDate;
         }
     
         if (!empty($endDate)) {
-            $query .= " AND cm.confirmed_at <= ?";
+            $query .= " AND cm.booking_date <= ?";
             $types .= "s";
             $params[] = $endDate;
         }
     
-        $query .= " ORDER BY cm.confirmed_at DESC";
+        $query .= " ORDER BY cm.booking_date DESC";
     
         $stmt = $conn->prepare($query);
         if (!$stmt) return [];

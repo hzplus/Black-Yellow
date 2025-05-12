@@ -77,7 +77,7 @@ $jobs = SearchPastJobsController::search($cleanerId, $keyword);
                         <td><?= htmlspecialchars($job['title']) ?></td>
                         <td><?= htmlspecialchars($job['category']) ?></td>
                         <td><?= htmlspecialchars($job['homeowner_name']) ?></td>
-                        <td><?= date("Y-m-d", strtotime($job['confirmed_at'])) ?></td>
+                        <td><?= date("Y-m-d", strtotime($job['booking_date'])) ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

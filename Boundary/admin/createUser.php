@@ -15,78 +15,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = trim($_POST['password']);
     $role     = $_POST['role'];
 
-    // Exception Flow: Validate input
     if (empty($username) || empty($email) || empty($password) || empty($role)) {
         $message = "❌ Please fill in all required fields correctly.";
     } else {
         $controller = new createUserController();
 
-        // Alternate Flow: Duplicate check
         if ($controller->userExists($username, $email)) {
             $message = "❌ Account already exists.";
         } else {
-            // Normal Flow: Create user
             $success = $controller->createUser($username, $email, $password, $role);
             $message = $success ? "✅ User account created successfully." : "❌ Failed to create user account.";
         }
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Create User Account</title>
-    <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="../../assets/css/style.css?v=1.0">
 </head>
 <body>
 
-<!-- Topbar -->
 <div class="topbar">
     Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!
     <a href="../../logout.php" class="logout-link">Logout</a>
 </div>
 
-<!-- Logo -->
 <div class="logo">
     <img src="../../assets/images/logo.jpg" alt="Logo">
 </div>
 
-<!-- Navigation -->
 <div class="navbar">
     <a href="adminDashboard.php">Home</a>
     <a href="userAccountsMenu.php">User Accounts</a>
     <a href="userProfilesMenu.php">User Profiles</a>
 </div>
 
-<!-- Page Content -->
 <div class="dashboard-content">
+  <div class="card">
     <h1>Create New User</h1>
 
-    <?php if (!empty($message)) echo "<div class='message'>$message</div>"; ?>
+    <?php if (!empty($message)): ?>
+      <div class="<?= strpos($message, '❌') === 0 ? 'error' : 'message' ?>">
+        <?= htmlspecialchars($message) ?>
+      </div>
+    <?php endif; ?>
 
-    <form method="POST">
-        <label>User Role:</label>
-        <select name="role" required>
-            <option value="">-- Select Role --</option>
-            <option value="Admin">Admin</option>
-            <option value="Cleaner">Cleaner</option>
-            <option value="Homeowner">Homeowner</option>
-            <option value="Manager">Manager</option>
+    <form method="POST" class="form-grid">
+      <div>
+        <label for="role">User Role</label><br>
+        <select id="role" name="role" required>
+          <option value="">-- Select Role --</option>
+          <option value="Admin" <?= ($_POST['role'] ?? '') === 'Admin' ? 'selected' : '' ?>>Admin</option>
+          <option value="Cleaner" <?= ($_POST['role'] ?? '') === 'Cleaner' ? 'selected' : '' ?>>Cleaner</option>
+          <option value="Homeowner" <?= ($_POST['role'] ?? '') === 'Homeowner' ? 'selected' : '' ?>>Homeowner</option>
+          <option value="Manager" <?= ($_POST['role'] ?? '') === 'Manager' ? 'selected' : '' ?>>Manager</option>
         </select>
+      </div>
 
-        <label>Username:</label>
-        <input type="text" name="username" required>
+      <div>
+        <label for="username">Username</label><br>
+        <input type="text" id="username" name="username" value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" required>
+      </div>
 
-        <label>Email:</label>
-        <input type="email" name="email" required>
+      <div>
+        <label for="email">Email</label><br>
+        <input type="email" id="email" name="email" value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
+      </div>
 
-        <label>Password:</label>
-        <input type="password" name="password" required>
+      <div>
+        <label for="password">Password</label><br>
+        <input type="password" id="password" name="password" required>
+      </div>
 
-        <button type="submit">Create Account</button>
-        <a href="userAccountsMenu.php"><button type="button">Back</button></a>
+      <div class="full-width">
+        <button type="submit">➕ Create Account</button>
+        <button type="button" onclick="location.href='userAccountsMenu.php'">🔙 Back</button>
+      </div>
     </form>
+  </div>
 </div>
 
 </body>

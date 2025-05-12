@@ -13,4 +13,10 @@ class CreateServiceController {
             echo "Failed to create service.";
         }
     }
+    public static function fetchCategories() {
+        $service = new CleanerService(null, null, null, null, null, null);
+        return $service->getAllCategories();
+    }
+    
+    
 }

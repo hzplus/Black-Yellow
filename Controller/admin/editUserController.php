@@ -1,21 +1,15 @@
 <?php
-require_once '../../db/Database.php';
-require_once '../../Entity/user/user.php';
+require_once __DIR__ . '/../../Entity/user.php';
 
 class editUserController {
-    public function getUserById($id) {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT * FROM users WHERE userid = ?");
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $user = $result->fetch_assoc();
-        $stmt->close();
-        return $user;
+
+    // Get user details by ID
+    public function getUserById($userId) {
+        return user::getUserById($userId);
     }
 
-    public function updateUser($id, $username, $email, $role, $status) {
-        $conn = Database::connect();
-        return User::update($conn, $id, $username, $email, $role, $status);
+    // Update user details
+    public function updateUser($userId, $username, $email, $role, $status) {
+        return user::updateUser($userId, $username, $email, $role, $status);
     }
 }

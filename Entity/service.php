@@ -38,6 +38,21 @@ class CleanerService {
         $stmt->close();
         return $success;
     }
+
+    function getAllCategories() {
+        $conn = Database::getConnection();
+        $query = "SELECT name FROM service_categories";
+        $result = $conn->query($query);
+        
+        $categories = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $categories[] = $row['name'];
+            }
+        }
+        return $categories;
+    }
+    
     
 
     function searchServicesByTitle($cleanerid, $keyword) {

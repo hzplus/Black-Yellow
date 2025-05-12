@@ -1,17 +1,17 @@
 <?php
-require_once '../../db/Database.php';
-require_once '../../Entity/user/user.php';
+// Controller/admin/createUserController.php
 
-class createUserController {
-    public function userExists($username, $email) {
-        $conn = Database::getConnection();
+require_once __DIR__ . '/../../Entity/user.php';
 
-        return User::exists($conn, $username, $email);
+class createUserController
+{
+    public function userExists(string $username, string $email): bool
+    {
+        return User::exists($username, $email);
     }
 
-    public function createUser($username, $email, $password, $role) {
-        $conn = Database::getConnection();
-
-        return User::create($conn, $username, $email, $password, $role);
+    public function createUser(string $username, string $email, string $password, string $role): bool
+    {
+        return User::create($username, $email, $password, $role);
     }
 }

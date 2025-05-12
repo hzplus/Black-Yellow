@@ -7,6 +7,8 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'Cleaner') {
 
 require_once(__DIR__ . '/../../Controller/cleaner/createServiceController.php');
 
+$categoryOptions = CreateServiceController::fetchCategories();
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $cleanerId = $_SESSION['userid'];
     $title = $_POST['title'];
@@ -80,15 +82,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <option value="Weekend 3PM-6PM">Weekend 3PM-6PM</option>
                 <option value="Flexible">Flexible</option>
             </select><br><br>
-
+            
             <label>Category:</label><br>
+            <select name="category" required>
+                <?php foreach ($categoryOptions as $cat): ?>
+                    <option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($cat) ?></option>
+                <?php endforeach; ?>
+            </select><br><br>
+
+            <!-- <label>Category:</label><br>
             <select name="category" required>
                 <option value="All-in-one">All-in-one</option>
                 <option value="Floor">Floor</option>
                 <option value="Laundry">Laundry</option>
                 <option value="Toilet">Toilet</option>
                 <option value="Window">Window</option>
-            </select><br><br>
+            </select><br><br> -->
 
             <label>Upload Image: <input type="file" name="image" accept="image/*"></><br>
             <button type="submit">Create Service</button>

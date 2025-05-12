@@ -50,14 +50,17 @@ $profiles = $controller->search(""); // show all profiles initially
                 <th>Profile ID</th>
                 <th>Role</th>
                 <th>Description</th>
+                <th>Status</th>
+                
             </tr>
         </thead>
         <tbody>
             <?php foreach ($profiles as $profile): ?>
                 <tr class="profile-row" data-role="<?= htmlspecialchars($profile->role) ?>" data-description="<?= htmlspecialchars($profile->description) ?>">
-                    <td><?= htmlspecialchars($profile->profileId) ?></td>
+                    <td><?= htmlspecialchars($profile->profile_id) ?></td>
                     <td><?= htmlspecialchars($profile->role) ?></td>
                     <td><?= htmlspecialchars($profile->description) ?></td>
+                    <td><?= htmlspecialchars($profile->status) ?></td> 
                 </tr>
             <?php endforeach; ?>
         </tbody>
@@ -84,6 +87,14 @@ function filterProfiles() {
     document.getElementById("noResultsMessage").style.display = (found === 0) ? "block" : "none";
 }
 </script>
+<a href="userProfilesMenu.php"><button type="button">Back</button></a>
 
 </body>
 </html>
+<style>
+  
+  #searchBox {
+    width: 300px;
+    max-width: 100%;
+  }
+</style>

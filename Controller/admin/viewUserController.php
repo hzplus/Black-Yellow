@@ -1,15 +1,28 @@
 <?php
-require_once '../../db/Database.php';
-require_once '../../Entity/user/user.php';
+// Controller/admin/viewUserController.php
 
-class viewUserController {
-    public function getUserById($id) {
-        $conn = Database::connect();
-        return User::getById($conn, $id);
+require_once __DIR__ . '/../../Entity/user.php';
+
+class viewUserController
+{
+    /**
+     * Fetch a single User by ID, or null.
+     *
+     * @param int $id
+     * @return User|null
+     */
+    public function getUserById(int $id): ?User
+    {
+        return User::getById($id);
     }
 
-    public function getAllUsers() {
-        $conn = Database::connect();
-        return User::getAllUsers($conn);
+    /**
+     * Fetch all users as an array of User objects.
+     *
+     * @return User[]
+     */
+    public function getAllUsers(): array
+    {
+        return User::getAll();
     }
 }
