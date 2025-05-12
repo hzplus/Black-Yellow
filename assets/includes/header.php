@@ -18,7 +18,7 @@
 <!-- Navigation Bar -->
 <nav class="navbar">
     <a href="HomeownerDashboard.php">Home</a>
-    <a href="CleanerListings.php">Cleaner Listings</a>
-    <a href="ServiceHistory.php">History</a>
-    <a href="MyAccount.php">My Account</a>
+    <a href="ViewCleanerListings.php">Cleaner Listings</a>
+    <a href="ViewServiceHistory.php">History</a>
+    <a href="ViewMyAccount.php">My Account</a>
 </nav>

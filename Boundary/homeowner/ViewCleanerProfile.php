@@ -1,182 +1,212 @@
 <?php
-// Enable error reporting for debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 session_start();
 
-require_once($_SERVER['DOCUMENT_ROOT'] . '/Black-Yellow/Controller/homeowner/ViewCleanerProfileController.php');
-
-// Get the cleaner ID from the URL
-$cleanerId = $_GET['id'] ?? $_GET['cleaner_id'] ?? null;
-
-if ($cleanerId === null) {
-    echo "<div class='alert error'><strong>Error:</strong> No cleaner ID provided.</div>";
-    exit;
+// Redirect if not logged in
+if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Homeowner') {
+    header("Location: ../login.php");
+    exit();
 }
 
-// Get the cleaner details
-$cleaner = ViewCleanerProfileController::getCleanerById($cleanerId);
+// Include controller
+require_once(__DIR__ . '/../../Controller/homeowner/CleanerProfileController.php');
+$controller = new CleanerProfileController();
 
-if ($cleaner === null) {
-    echo "<div class='alert error'><strong>Error:</strong> Cleaner with ID $cleanerId not found in the database.</div>";
-    exit;
+// Get cleaner ID from URL
+$cleanerId = $_GET['id'] ?? 0;
+
+// Validate cleaner ID
+if (!$cleanerId) {
+    echo "Invalid cleaner ID.";
+    exit();
 }
 
-// Check if the user is logged in and is a homeowner
-$isLoggedIn = isset($_SESSION['userid']) && !empty($_SESSION['userid']);
-$isHomeowner = $isLoggedIn && ($_SESSION['role'] === 'Homeowner' || $_SESSION['role'] === 'homeowner');
+// Get homeowner ID
+$homeownerId = $_SESSION['userid'];
 
-if (!$isLoggedIn || !$isHomeowner) {
-    $statusMessage = "<div class='alert warning'><strong>Notice:</strong> You are viewing this page as a guest. Please log in as a homeowner to shortlist cleaners.</div>";
-    $canShortlist = false;
-} else {
-    $canShortlist = true;
-    $homeownerId = $_SESSION['userid'];
-    $isShortlisted = ViewCleanerProfileController::isCleanerShortlisted($cleanerId, $homeownerId);
-    
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        if (isset($_POST['remove_id'])) {
-            $result = ViewCleanerProfileController::toggleShortlist($_POST['remove_id'], $homeownerId);
-            $statusMessage = $result ? 
-                "<div class='alert success'><strong>Success:</strong> Cleaner removed from shortlist.</div>" : 
-                "<div class='alert error'><strong>Error:</strong> Error removing cleaner from shortlist.</div>";
-        } else if (isset($_POST['cleaner_id'])) {
-            $result = ViewCleanerProfileController::toggleShortlist($_POST['cleaner_id'], $homeownerId);
-            $statusMessage = $result ? 
-                "<div class='alert success'><strong>Success:</strong> Cleaner added to shortlist.</div>" : 
-                "<div class='alert error'><strong>Error:</strong> Error adding cleaner to shortlist.</div>";
-        }
-        
-        // Re-check shortlist status after action
-        $isShortlisted = ViewCleanerProfileController::isCleanerShortlisted($cleanerId, $homeownerId);
-    }
+// Get cleaner data
+$cleaner = $controller->getCleanerById($cleanerId);
+
+// Check if cleaner exists
+if (!$cleaner) {
+    echo "Cleaner not found.";
+    exit();
 }
 
+// Get services offered by this cleaner
+$services = $controller->getCleanerServices($cleanerId);
+
+// Check if cleaner is shortlisted by the current homeowner
+$isShortlisted = $controller->isShortlisted($cleanerId, $homeownerId);
+
+// Handle shortlist toggle if form submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_shortlist'])) {
+    $controller->toggleShortlist($cleanerId, $homeownerId);
+    // Refresh page to update shortlist status
+    header("Location: ViewCleanerProfile.php?id=$cleanerId");
+    exit();
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cleaner Profile - <?php echo htmlspecialchars($cleaner->getName()); ?></title>
-    <link rel="stylesheet" href="/Black-Yellow/assets/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title><?php echo htmlspecialchars($cleaner->getName()); ?> - Cleaner Profile</title>
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <style>
+        .shortlist-btn {
+            transition: all 0.3s ease;
+        }
+        .shortlist-btn:hover {
+            transform: scale(1.05);
+        }
+        .service-box {
+            transition: all 0.3s ease;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
+        .service-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .service-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #4a90e2;
+        }
+        .service-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .service-price {
+            font-size: 18px;
+            color: #2ecc71;
+            margin-bottom: 5px;
+        }
+        .service-category {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
-<!-- Include the header (topbar and navbar) -->
+
+<!-- Include the header -->
 <?php include '../../assets/includes/header.php'; ?>
-    
-    <!-- Back Button -->
-    <div class="back-button-container">
-        <a href="javascript:history.back()" class="back-button">
-            <i class="fas fa-arrow-left"></i> Back
-        </a>
-    </div>
 
-    <!-- Profile Content -->
-    <div class="profile-container">
-        <div class="profile-card">
-            <!-- Alert Messages (if any) -->
-            <?php if (isset($statusMessage)) echo $statusMessage; ?>
-
-            <div class="profile-header-section">
-                <div class="profile-picture-container">
-                    <img src="/Black-Yellow/assets/cleaners/<?php echo htmlspecialchars($cleaner->getProfilePicture() ?: 'default.jpg'); ?>" 
-                         alt="<?php echo htmlspecialchars($cleaner->getName()); ?>'s Profile Picture" 
-                         class="profile-picture"
-                         onerror="this.src='/Black-Yellow/assets/cleaners/default.jpg'">
-                </div>
-                <div class="profile-header-content">
-                    <h2 class="profile-header"><?php echo htmlspecialchars($cleaner->getName()); ?></h2>
-                    <div class="profile-info">
-                        <?php echo htmlspecialchars($cleaner->getBio() ?? 'No bio available.'); ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="services-section">
-                <h3 class="section-title">
-                    <i class="fas fa-broom"></i> Services Offered
-                </h3>
-                
-                <div class="services-grid">
-                    <?php
-                    $services = $cleaner->getServices();
-                    if (is_array($services) && !empty($services)):
-                        foreach ($services as $service): 
-                            // Choose an icon based on the service category
-                            $icon = 'fa-broom'; // default
-                            if ($service->getCategory()) {
-                                switch (strtolower($service->getCategory())) {
-                                    case 'floor': $icon = 'fa-mop'; break;
-                                    case 'laundry': $icon = 'fa-tshirt'; break;
-                                    case 'toilet': $icon = 'fa-toilet'; break;
-                                    case 'window': $icon = 'fa-window-maximize'; break;
-                                    case 'all-in-one': $icon = 'fa-house-user'; break;
-                                }
-                            }
-                    ?>
-                            <a href="ViewServiceDetails.php?service_id=<?php echo $service->getId(); ?>" class="service-box">
-                                <div class="service-icon">
-                                    <i class="fas <?php echo $icon; ?>"></i>
-                                </div>
-                                <div class="service-title"><?php echo htmlspecialchars($service->getTitle()); ?></div>
-                                <div class="service-price"><?php echo htmlspecialchars($service->getFormattedPrice()); ?></div>
-                                <?php if ($service->getCategory()): ?>
-                                    <div class="service-category"><?php echo htmlspecialchars($service->getCategory()); ?></div>
-                                <?php endif; ?>
-                            </a>
-                        <?php endforeach;
-                    else: ?>
-                        <div class="no-services">
-                            <p>No services available from this cleaner.</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
+<div class="profile-container">
+    <div class="profile-card">
+        <a href="ViewCleanerListings.php" class="back-button">← Back to Listings</a>
+        
+        <div class="profile-header-section">
+            <div class="profile-picture-container">
+                <img src="../../assets/images/cleaners/<?php echo htmlspecialchars($cleaner->getProfileImage()) ?: 'default.jpg'; ?>" 
+                     alt="<?php echo htmlspecialchars($cleaner->getName()); ?>" 
+                     class="profile-picture">
             </div>
             
-            <div class="shortlist-button-container">
-                <?php if ($canShortlist): ?>
-                    <form action="" method="POST">
-                        <?php if ($isShortlisted): ?>
-                            <input type="hidden" name="remove_id" value="<?php echo $cleaner->getId(); ?>">
-                            <button type="submit" class="shortlist-button remove">
-                                <i class="fas fa-bookmark"></i> Remove from Shortlist
-                            </button>
-                        <?php else: ?>
-                            <input type="hidden" name="cleaner_id" value="<?php echo $cleaner->getId(); ?>">
-                            <button type="submit" class="shortlist-button">
-                                <i class="fas fa-bookmark"></i> Add to Shortlist
-                            </button>
-                        <?php endif; ?>
+            <div class="profile-header-content">
+                <h2 class="profile-header"><?php echo htmlspecialchars($cleaner->getName()); ?></h2>
+                
+                <div class="profile-info">
+                    <?php echo htmlspecialchars($cleaner->getBio()); ?>
+                </div>
+                
+                <div id="shortlist-container">
+                    <form method="POST" id="shortlist-form" class="shortlist-form">
+                        <input type="hidden" name="toggle_shortlist" value="1">
+                        
+                        <button type="submit" id="shortlist-btn" class="shortlist-btn <?php echo $isShortlisted ? 'remove' : ''; ?>">
+                            <?php echo $isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'; ?>
+                        </button>
                     </form>
-                <?php else: ?>
-                    <button class="shortlist-button" disabled>
-                        <i class="fas fa-user"></i> Login as Homeowner to Shortlist
-                    </button>
-                <?php endif; ?>
+                </div>
             </div>
         </div>
-    </div>
-
-    <script>
-        // Animation for service boxes
-        document.addEventListener('DOMContentLoaded', function() {
-            const serviceBoxes = document.querySelectorAll('.service-box');
+        
+        <div class="services-section">
+            <h3 class="section-title">Services Offered</h3>
             
-            serviceBoxes.forEach((box, index) => {
-                box.style.opacity = '0';
-                box.style.transform = 'translateY(20px)';
-                
-                setTimeout(() => {
-                    box.style.transition = 'all 0.5s ease';
-                    box.style.opacity = '1';
-                    box.style.transform = 'translateY(0)';
-                }, 100 * (index + 1));
+            <?php if(empty($services)): ?>
+                <p class="no-services">No services currently offered by this cleaner.</p>
+            <?php else: ?>
+                <div class="services-grid">
+                    <?php foreach($services as $service): ?>
+                        <a href="ViewServiceDetails.php?id=<?php echo $service->getId(); ?>" class="service-box">
+                            <div class="service-icon">
+                                <!-- Use appropriate icon based on service category -->
+                                <?php 
+                                $icon = 'broom'; // Default icon
+                                $category = strtolower($service->getCategory());
+                                
+                                if (strpos($category, 'floor') !== false) $icon = 'mop';
+                                else if (strpos($category, 'window') !== false) $icon = 'window';
+                                else if (strpos($category, 'toilet') !== false) $icon = 'toilet';
+                                else if (strpos($category, 'laundry') !== false) $icon = 'tshirt';
+                                ?>
+                                
+                                <i class="fas fa-<?php echo $icon; ?>"></i>
+                            </div>
+                            <div class="service-title"><?php echo htmlspecialchars($service->getTitle()); ?></div>
+                            <div class="service-price"><?php echo htmlspecialchars($service->getFormattedPrice()); ?></div>
+                            <div class="service-category"><?php echo htmlspecialchars($service->getCategory()); ?></div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+        
+        <div class="contact-section">
+            <h3 class="section-title">Contact Information</h3>
+            <p>Email: <?php echo htmlspecialchars($cleaner->getEmail()); ?></p>
+            <?php if($cleaner->getPhone()): ?>
+                <p>Phone: <?php echo htmlspecialchars($cleaner->getPhone()); ?></p>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Enhanced shortlist button
+    document.addEventListener('DOMContentLoaded', function() {
+        const shortlistForm = document.getElementById('shortlist-form');
+        const shortlistBtn = document.getElementById('shortlist-btn');
+        
+        shortlistForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Visual feedback
+            shortlistBtn.disabled = true;
+            shortlistBtn.textContent = shortlistBtn.classList.contains('remove') ? 'Removing...' : 'Adding...';
+            
+            // Submit form
+            fetch(shortlistForm.action, {
+                method: 'POST',
+                body: new FormData(shortlistForm)
+            })
+            .then(response => response.json().catch(() => ({})))
+            .then(data => {
+                // Toggle button appearance
+                shortlistBtn.classList.toggle('remove');
+                shortlistBtn.textContent = shortlistBtn.classList.contains('remove') ? 'Remove from Shortlist' : 'Add to Shortlist';
+                shortlistBtn.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                shortlistBtn.disabled = false;
+                // Just submit the form normally if there's an error
+                shortlistForm.submit();
             });
         });
-    </script>
+    });
+</script>
+
 </body>
 </html>

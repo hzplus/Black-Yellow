@@ -1,219 +1,187 @@
 <?php
-// Enable error reporting for debugging
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// Start output buffering at the top of the file to capture unwanted debug output
+ob_start();
 
 session_start();
 
-require_once($_SERVER['DOCUMENT_ROOT'] . '/Black-Yellow/Controller/homeowner/ViewServiceDetailsController.php');
+// Redirect if not logged in
+if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Homeowner') {
+    header("Location: ../login.php");
+    exit();
+}
 
-$serviceId = $_GET['service_id'] ?? null;
+// Include controller
+require_once(__DIR__ . '/../../Controller/homeowner/ServiceDetailsController.php');
+$controller = new ServiceDetailsController();
 
-if ($serviceId === null) {
-    echo "<div class='alert error'><strong>Error:</strong> No service ID provided.</div>";
-    exit;
+// Get service ID from URL
+$serviceId = $_GET['id'] ?? 0;
+
+// Validate service ID
+if (!$serviceId) {
+    echo "Invalid service ID.";
+    exit();
+}
+
+// Get homeowner ID
+$homeownerId = $_SESSION['userid'];
+
+// Get service data
+$service = $controller->getServiceById($serviceId);
+
+// Check if service exists
+if (!$service) {
+    echo "Service not found.";
+    exit();
 }
 
 // Increment view count
-ViewServiceDetailsController::incrementViewCount($serviceId);
+$controller->incrementViewCount($serviceId);
 
-// Get service details
-$service = ViewServiceDetailsController::getServiceById($serviceId);
-
-if ($service === null) {
-    echo "<div class='alert error'><strong>Error:</strong> Service with ID $serviceId not found.</div>";
-    exit;
-}
-
-$isLoggedIn = isset($_SESSION['userid']) && !empty($_SESSION['userid']);
-$isHomeowner = $isLoggedIn && ($_SESSION['role'] === 'Homeowner' || $_SESSION['role'] === 'homeowner');
-
-// Handle booking submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_service'])) {
-    if ($isLoggedIn && $isHomeowner) {
-        $homeownerId = $_SESSION['userid'];
-        $cleanerId = $service->getCleanerId();
-        $bookingDate = $_POST['booking_date'] . ' ' . $_POST['booking_time'];
-        
-        // Process the booking
-        $success = ViewServiceDetailsController::bookService($homeownerId, $cleanerId, $serviceId, $bookingDate);
-        
-        $statusMessage = $success ? 
-            "<div class='alert success'><strong>Success!</strong> Your booking request has been submitted.</div>" : 
-            "<div class='alert error'><strong>Error:</strong> There was a problem processing your booking request. Please try again.</div>";
-    } else {
-        $statusMessage = "<div class='alert warning'><strong>Notice:</strong> Please log in as a homeowner to book services.</div>";
-    }
-}
-
-// Handle shortlisting the cleaner
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_shortlist'])) {
-    if ($isLoggedIn && $isHomeowner) {
-        $homeownerId = $_SESSION['userid'];
-        $result = ViewServiceDetailsController::toggleShortlist($service->getCleanerId(), $homeownerId);
-        $statusMessage = $result ? 
-            "<div class='alert success'><strong>Success:</strong> Shortlist updated successfully.</div>" : 
-            "<div class='alert error'><strong>Error:</strong> Error updating shortlist.</div>";
-    } else {
-        $statusMessage = "<div class='alert warning'><strong>Notice:</strong> Please log in as a homeowner to shortlist cleaners.</div>";
-    }
-}
+// Get cleaner data
+$cleaner = $controller->getCleanerById($service->getCleanerId());
 
 // Check if cleaner is shortlisted
-$isShortlisted = false;
-if ($isLoggedIn && $isHomeowner) {
-    $homeownerId = $_SESSION['userid'];
-    $isShortlisted = ViewServiceDetailsController::isCleanerShortlisted($service->getCleanerId(), $homeownerId);
+$isShortlisted = $controller->isCleanerShortlisted($service->getCleanerId(), $homeownerId);
+
+// Handle booking request
+$bookingMessage = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_service'])) {
+    $date = $_POST['booking_date'];
+    $time = $_POST['booking_time'];
+    $notes = $_POST['booking_notes'] ?? '';
+    
+    $bookingDateTime = $date . ' ' . $time . ':00';
+    
+    $result = $controller->bookService($homeownerId, $service->getCleanerId(), $serviceId, $bookingDateTime, $notes);
+    
+    if ($result) {
+        $bookingMessage = '<div class="alert success">Booking request submitted successfully!</div>';
+    } else {
+        $bookingMessage = '<div class="alert error">Failed to submit booking request. Please try again.</div>';
+    }
 }
 
-// Format date range for availability
-$availabilityText = $service->getAvailability();
-?>
+// Handle shortlist toggle
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_shortlist'])) {
+    $controller->toggleShortlist($service->getCleanerId(), $homeownerId);
+    // Redirect to refresh page and avoid form resubmission
+    header("Location: ViewServiceDetails.php?id=$serviceId");
+    exit();
+}
 
+// Clear the buffer to remove any debug output
+ob_clean();
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($service->getTitle()); ?> - Service Details</title>
-    <link rel="stylesheet" href="/Black-Yellow/assets/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/style.css">
 </head>
 <body>
-    <!-- Include the header (topbar and navbar) -->
-    <?php include '../../assets/includes/header.php'; ?>
-    
-    <div class="service-details-container">
-        <div class="service-card">
-            <!-- Back button and alerts -->
-            <a href="javascript:history.back()" class="back-button">
-                <i class="fas fa-arrow-left"></i> Back
-            </a>
-            
-            <?php if (isset($statusMessage)) echo $statusMessage; ?>
-            
-            <div class="service-header">
-                <div class="service-title-section">
-                    <h1><?php echo htmlspecialchars($service->getTitle()); ?></h1>
-                    <div>
-                        <span class="service-category">
-                            <i class="fas fa-tag"></i> 
-                            <?php echo htmlspecialchars($service->getCategory() ?? 'General'); ?>
-                        </span>
-                        <div class="service-meta">
-                            <span><i class="fas fa-eye"></i> <?php echo $service->getViewCount(); ?> views</span>
-                            <span><i class="fas fa-bookmark"></i> <?php echo $service->getShortlistCount(); ?> shortlists</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="service-price">
-                    <?php echo htmlspecialchars($service->getFormattedPrice()); ?>
+
+<!-- Include the header -->
+<?php include '../../assets/includes/header.php'; ?>
+
+<div class="service-details-container">
+    <div class="service-card">
+        <a href="ViewCleanerProfile.php?id=<?php echo $service->getCleanerId(); ?>" class="back-button">← Back to Cleaner Profile</a>
+        
+        <?php if ($bookingMessage) echo $bookingMessage; ?>
+        
+        <div class="service-header">
+            <div class="service-title-section">
+                <h1><?php echo htmlspecialchars($service->getTitle()); ?></h1>
+                <div class="service-meta">
+                    <span class="service-category"><?php echo htmlspecialchars($service->getCategory()); ?></span>
+                    <span><?php echo $service->getViewCount(); ?> views</span>
                 </div>
             </div>
-            
-            <div class="service-content">
-                <div class="service-image-container">
-                    <?php if ($service->getImagePath()): ?>
-                        <img src="/Black-Yellow/<?php echo htmlspecialchars($service->getImagePath()); ?>" alt="<?php echo htmlspecialchars($service->getTitle()); ?>" class="service-image">
-                    <?php else: ?>
-                        <div class="service-image">
-                            <i class="fas fa-image"></i>
-                        </div>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="service-details">
-                    <h2>Description</h2>
-                    <div class="service-description">
-                        <?php echo htmlspecialchars($service->getDescription() ?? 'No description available.'); ?>
-                    </div>
-                    
-                    <div class="service-availability">
-                        <h3><i class="fas fa-calendar-alt"></i> Availability</h3>
-                        <p><?php echo htmlspecialchars($availabilityText); ?></p>
-                    </div>
-                    
-                    <div class="cleaner-info">
-                        <img src="/Black-Yellow/assets/cleaners/default.jpg" 
-                             alt="<?php echo htmlspecialchars($service->getCleanerName()); ?>" 
-                             class="cleaner-avatar">
-                        <div>
-                            <h3>Provided by</h3>
-                            <p><?php echo htmlspecialchars($service->getCleanerName()); ?></p>
-                            <a href="ViewCleanerProfile.php?cleaner_id=<?php echo $service->getCleanerId(); ?>" class="profile-link">
-                                View Full Profile
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="stats-section">
-                <div class="stat-item">
-                    <div class="stat-number"><?php echo $service->getViewCount(); ?></div>
-                    <div class="stat-label">Views</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number"><?php echo $service->getShortlistCount(); ?></div>
-                    <div class="stat-label">Shortlists</div>
-                </div>
-            </div>
-            
-            <div class="booking-section">
-                <?php if ($isLoggedIn && $isHomeowner): ?>
-                    <form method="POST" class="booking-form">
-                        <h2>Book This Service</h2>
-                        
-                        <div class="form-group">
-                            <label for="booking_date">Preferred Date</label>
-                            <input type="date" id="booking_date" name="booking_date" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="booking_time">Preferred Time</label>
-                            <input type="time" id="booking_time" name="booking_time" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="booking_notes">Additional Notes</label>
-                            <textarea id="booking_notes" name="booking_notes" placeholder="Any special requests or information for the cleaner..."></textarea>
-                        </div>
-                        
-                        <button type="submit" name="book_service" class="book-btn">
-                            <i class="fas fa-calendar-check"></i> Book Now
-                        </button>
-                    </form>
-                    
-                    <form method="POST">
-                        <input type="hidden" name="toggle_shortlist" value="1">
-                        <button type="submit" class="shortlist-btn <?php echo $isShortlisted ? 'remove' : ''; ?>">
-                            <i class="fas fa-bookmark"></i> 
-                            <?php echo $isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'; ?>
-                        </button>
-                    </form>
+            <div class="service-price">$<?php echo htmlspecialchars(number_format($service->getPrice(), 2)); ?></div>
+        </div>
+        
+        <div class="service-content">
+            <div class="service-image-container">
+                <?php if ($service->getImagePath()): ?>
+                    <img src="../../<?php echo htmlspecialchars($service->getImagePath()); ?>" alt="<?php echo htmlspecialchars($service->getTitle()); ?>" class="service-image">
                 <?php else: ?>
-                    <div class="alert warning">
-                        <strong>Notice:</strong> Please <a href="/Black-Yellow/public/login.php" style="color: #FFD700;">log in</a> as a homeowner to book this service or add to shortlist.
-                    </div>
+                    <div class="service-image"><i class="fas fa-image"></i></div>
                 <?php endif; ?>
             </div>
+            
+            <div class="service-details">
+                <h2>Description</h2>
+                <div class="service-description">
+                    <?php echo htmlspecialchars($service->getDescription()); ?>
+                </div>
+                
+                <div class="availability-section">
+                    <h3>Availability</h3>
+                    <p><?php echo htmlspecialchars($service->getAvailability()); ?></p>
+                </div>
+                
+                <div class="cleaner-info">
+                    <img src="../../assets/images/cleaners/<?php echo htmlspecialchars($cleaner->getProfileImage()) ?: 'default.jpg'; ?>" 
+                         alt="<?php echo htmlspecialchars($cleaner->getName()); ?>" 
+                         class="cleaner-avatar">
+                    <div>
+                        <h3>Provided by</h3>
+                        <p><?php echo htmlspecialchars($cleaner->getName()); ?></p>
+                        <a href="ViewCleanerProfile.php?id=<?php echo $cleaner->getId(); ?>" class="profile-link">
+                            View Full Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="booking-section">
+            <form method="POST" class="booking-form">
+                <h2>Book This Service</h2>
+                
+                <div class="booking-fields">
+                    <div class="form-group">
+                        <label for="booking_date">Preferred Date</label>
+                        <input type="date" id="booking_date" name="booking_date" required min="<?php echo date('Y-m-d'); ?>">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="booking_time">Preferred Time</label>
+                        <input type="time" id="booking_time" name="booking_time" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="booking_notes">Additional Notes</label>
+                        <textarea id="booking_notes" name="booking_notes" placeholder="Any special requests or information..."></textarea>
+                    </div>
+                    
+                    <button type="submit" name="book_service" class="book-btn">Book Now</button>
+                </div>
+            </form>
+            
+            <form method="POST">
+                <input type="hidden" name="toggle_shortlist" value="1">
+                <?php if ($isShortlisted): ?>
+                    <button type="submit" class="shortlist-btn remove">Remove Cleaner from Shortlist</button>
+                <?php else: ?>
+                    <button type="submit" class="shortlist-btn">Add Cleaner to Shortlist</button>
+                <?php endif; ?>
+            </form>
         </div>
     </div>
-    
-    <script>
-        // Date restriction - only allow future dates
-        document.addEventListener('DOMContentLoaded', function() {
-            const dateInput = document.getElementById('booking_date');
-            if (dateInput) {
-                const today = new Date();
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                
-                const formattedTomorrow = tomorrow.toISOString().split('T')[0];
-                dateInput.setAttribute('min', formattedTomorrow);
-            }
-        });
-    </script>
+</div>
+
+<script>
+    // Set minimum date to today
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('booking_date');
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.setAttribute('min', today);
+    });
+</script>
+
 </body>
 </html>
