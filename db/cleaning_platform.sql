@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: May 09, 2025 at 12:56 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Host: localhost
+-- Generation Time: May 12, 2025 at 02:58 PM
+-- Server version: 10.4.28-MariaDB
+-- PHP Version: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -45,6 +45,20 @@ INSERT INTO `confirmed_matches` (`matchid`, `cleanerid`, `homeownerid`, `service
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `match_history`
+--
+
+CREATE TABLE `match_history` (
+  `matchid` int(11) NOT NULL,
+  `cleanerid` int(11) DEFAULT NULL,
+  `homeownerid` int(11) DEFAULT NULL,
+  `serviceid` int(11) DEFAULT NULL,
+  `match_date` date DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `services`
 --
 
@@ -58,19 +72,24 @@ CREATE TABLE `services` (
   `view_count` int(11) DEFAULT 0,
   `shortlist_count` int(11) DEFAULT 0,
   `image_path` varchar(255) DEFAULT NULL,
-  `availability` enum('Mon-Fri 9AM-12PM','Mon-Fri 12PM-3PM','Mon-Fri 3PM-6PM','Weekend 9AM-12PM','Weekend 12PM-3PM','Weekend 3PM-6PM','Flexible') NOT NULL
+  `availability` enum('Mon-Fri 9AM-12PM','Mon-Fri 12PM-3PM','Mon-Fri 3PM-6PM','Mon-Fri 9AM-5PM','Mon-Sat 8AM-12PM','Weekends 10AM-4PM','Mon-Fri 1PM-6PM','Flexible by appointment') DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `services`
 --
 
-INSERT INTO `services` (`serviceid`, `cleanerid`, `title`, `description`, `price`, `category`, `view_count`, `shortlist_count`, `image_path`, `availability`) VALUES
-(2, 6, 'waxonwaxoff', 'waxonwaxoff', 1000.00, 'Floor', 0, 0, NULL, 'Mon-Fri 9AM-12PM'),
-(8, 6, 'ss', 'ss', 111.00, 'All-in-one', 0, 0, NULL, 'Mon-Fri 9AM-12PM'),
-(9, 6, 'Wax on Wax off', 'a', 1000.00, 'Floor', 0, 0, 'assets/images/68176e27f3b10_waxonwaxoff.png', 'Mon-Fri 9AM-12PM'),
-(10, 6, 'adada', 'aaaadaa', 1.00, 'Floor', 0, 0, NULL, 'Flexible'),
-(13, 6, 'bbblol', 'bbbhehe', 2.00, 'Laundry', 0, 0, 'assets/images/681da7e0009fb_waxonwaxoff.png', 'Mon-Fri 9AM-12PM');
+INSERT INTO `services` (`serviceid`, `cleanerid`, `title`, `description`, `price`, `category`, `view_count`, `shortlist_count`, `image_path`, `availability`, `created_at`) VALUES
+(2, 6, 'waxonwaxoff', 'waxonwaxoff', 1000.00, 'Floor', 5, 1, NULL, 'Mon-Fri 9AM-12PM', '2025-05-12 19:10:24'),
+(8, 6, 'ss', 'ss', 111.00, 'All-in-one', 4, 1, NULL, 'Mon-Fri 9AM-12PM', '2025-05-12 19:10:24'),
+(9, 6, 'Wax on Wax off', 'a', 1000.00, 'Floor', 2, 1, 'assets/images/68176e27f3b10_waxonwaxoff.png', 'Mon-Fri 9AM-12PM', '2025-05-12 19:10:24'),
+(10, 7, 'Test Service', 'Description of test service', 50.00, 'All-in-one', 0, 0, NULL, 'Mon-Fri 9AM-12PM', '2025-05-12 19:10:24'),
+(16, 10, 'Deep Home Cleaning', 'A thorough cleaning of your entire home including kitchen, bathrooms, and living areas.', 150.00, 'All-in-one', 18, 0, NULL, 'Mon-Fri 9AM-5PM', '2025-05-12 19:10:24'),
+(17, 11, 'Carpet & Upholstery Cleaning', 'Expert steam cleaning of carpets and upholstered furniture.', 120.00, 'Floor', 0, 0, NULL, 'Weekends 10AM-4PM', '2025-05-12 19:10:24'),
+(18, 12, 'Bathroom Sanitization', 'High-grade sanitization and cleaning of bathrooms with eco-friendly products.', 90.00, 'Toilet', 0, 0, NULL, 'Mon-Sat 8AM-12PM', '2025-05-12 19:10:24'),
+(19, 13, 'Kitchen Degrease Service', 'Intensive kitchen cleaning including countertops, stove, hood and floors.', 110.00, 'Floor', 0, 0, NULL, 'Mon-Fri 1PM-6PM', '2025-05-12 19:10:24'),
+(20, 14, 'Post-Renovation Cleanup', 'Complete cleaning after home renovation, including dust removal and disposal.', 200.00, 'All-in-one', 0, 0, NULL, 'Flexible by appointment', '2025-05-12 19:10:24');
 
 -- --------------------------------------------------------
 
@@ -80,19 +99,24 @@ INSERT INTO `services` (`serviceid`, `cleanerid`, `title`, `description`, `price
 
 CREATE TABLE `service_categories` (
   `categoryid` int(11) NOT NULL,
-  `name` varchar(100) NOT NULL
+  `name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `service_categories`
 --
 
-INSERT INTO `service_categories` (`categoryid`, `name`) VALUES
-(1, 'All-in-one'),
-(2, 'Floor'),
-(3, 'Laundry'),
-(4, 'Toilet'),
-(5, 'Window');
+INSERT INTO `service_categories` (`categoryid`, `name`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'All-in-one', NULL, '2025-05-12 17:59:17', '2025-05-12 17:59:17'),
+(2, 'Floor', NULL, '2025-05-12 17:59:17', '2025-05-12 17:59:17'),
+(3, 'Laundry', NULL, '2025-05-12 17:59:17', '2025-05-12 17:59:17'),
+(4, 'Toilet', NULL, '2025-05-12 17:59:17', '2025-05-12 17:59:17'),
+(5, 'Window', NULL, '2025-05-12 17:59:17', '2025-05-12 17:59:17'),
+(7, 'Room', 'Clean room', '2025-05-12 13:12:55', '2025-05-12 13:12:55'),
+(8, 'Deep Cleaning', '', '2025-05-12 14:41:38', '2025-05-12 14:41:38');
 
 -- --------------------------------------------------------
 
@@ -106,6 +130,16 @@ CREATE TABLE `shortlists` (
   `cleanerid` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `shortlists`
+--
+
+INSERT INTO `shortlists` (`shortlistid`, `homeownerid`, `cleanerid`) VALUES
+(10, 1, 6),
+(11, 9, 6),
+(12, 9, 7),
+(14, 9, 10);
+
 -- --------------------------------------------------------
 
 --
@@ -118,32 +152,38 @@ CREATE TABLE `users` (
   `email` varchar(150) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` varchar(20) NOT NULL,
-  `status` varchar(20) NOT NULL DEFAULT 'active'
+  `status` varchar(20) NOT NULL DEFAULT 'active',
+  `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`userid`, `username`, `email`, `password`, `role`, `status`) VALUES
-(1, 'joonian', 'joonian656@gmail.com', '$2y$10$4VxyHkzWH5cbr7kehXVjzu8LwCyslJgTi91djB9f9Fnb8ogdsQ7Xy', 'Admin', 'suspended'),
-(2, 'admin1', 'admin1@email.com', '$2y$10$baT7Tw5OpYsQ/6QQQAhs2OCkJ8cx0d1NnaYwl3pgCTGFaDxUGoqDO', 'Admin', 'suspended'),
-(3, 'admin2', 'admin2@email.com', '$2y$10$q0OXMreJhU/GKvxFH8iGTu554cPIPvfALLfAU4xdMa0HmDWuVWvxi', 'Admin', 'suspended'),
-(4, 'admin3', 'admin3@email.com', '$2y$10$QzhAfTVkSAdUPI5ENcmXwu2mZHFMfGfxnWoe.01rBcV.Lyq8da9T.', 'Admin', 'active'),
-(5, 'admin4', 'admin4@email.com', '$2y$10$sOCJjWf68vHZjNkWuBWtp.PiNB3f/FDE1mXf92fsoVNqjlqvBnJUC', 'Admin', 'active'),
-(6, 'cleaner', 'cleaner@gmail.com', '$2y$10$/zfv1vdwwyBbrZEcc6Es1e7t6WESTh.13.Vo6prb5lAoytNHa7ds2', 'Cleaner', 'active'),
-(7, 'cleaner2', 'cleaner2@gmail.com', '$2y$10$Q6tPaFl17jCM3We/xxnrduEw8P1quLaEq1kiN5/up0shSLCO.iFle', 'Cleaner', 'active'),
-(8, 'cleanernum2', 'cleanernum2@gmail.com', '$2y$10$E4tdpld0jxuxqeevLDPUquzXPoWLta2nfPhxnlwWu89kGapAFdwje', 'Cleaner', 'active'),
-(9, 'homeowner', 'homeowner@gmail.com', '$2y$10$9LA0ymxSeN4lsM0c2n2oDebnoALGA0c83a9OkhCDfxliodmY0r74u', 'Homeowner', 'active');
+INSERT INTO `users` (`userid`, `username`, `email`, `password`, `role`, `status`, `created_at`) VALUES
+(1, 'joonian', 'joonian656@gmail.com', '$2y$10$4VxyHkzWH5cbr7kehXVjzu8LwCyslJgTi91djB9f9Fnb8ogdsQ7Xy', 'Admin', 'suspended', '2025-05-12 19:10:24'),
+(2, 'admin1', 'admin1@email.com', '$2y$10$baT7Tw5OpYsQ/6QQQAhs2OCkJ8cx0d1NnaYwl3pgCTGFaDxUGoqDO', 'Admin', 'suspended', '2025-05-12 19:10:24'),
+(3, 'admin2', 'admin2@email.com', '$2y$10$q0OXMreJhU/GKvxFH8iGTu554cPIPvfALLfAU4xdMa0HmDWuVWvxi', 'Admin', 'suspended', '2025-05-12 19:10:24'),
+(4, 'admin3', 'admin3@email.com', '$2y$10$QzhAfTVkSAdUPI5ENcmXwu2mZHFMfGfxnWoe.01rBcV.Lyq8da9T.', 'Admin', 'active', '2025-05-12 19:10:24'),
+(5, 'admin4', 'admin4@email.com', '$2y$10$sOCJjWf68vHZjNkWuBWtp.PiNB3f/FDE1mXf92fsoVNqjlqvBnJUC', 'Admin', 'active', '2025-05-12 19:10:24'),
+(6, 'cleaner', 'cleaner@gmail.com', '$2y$10$/zfv1vdwwyBbrZEcc6Es1e7t6WESTh.13.Vo6prb5lAoytNHa7ds2', 'Cleaner', 'active', '2025-05-12 19:10:24'),
+(7, 'cleaner2', 'cleaner2@gmail.com', '$2y$10$Q6tPaFl17jCM3We/xxnrduEw8P1quLaEq1kiN5/up0shSLCO.iFle', 'Cleaner', 'active', '2025-05-12 19:10:24'),
+(9, 'homeowner', 'homeowner@gmail.com', '$2y$10$xNz07zz0K7iXU79vfmLhEeF7KtMiYIs/tRZnbm9uaHvBAK8n5b9FC', 'Homeowner', 'active', '2025-05-12 19:10:24'),
+(10, 'alice_wong', 'alice.wong@example.com', '$2y$10$QXqKyowmlN6i3Yc5uBybfe3kK2Rb8NCIKsbGm5Hb2yZTjvVczmvX6', 'Cleaner', 'active', '2025-05-12 19:10:24'),
+(11, 'john_doe', 'john.doe@example.com', '$2y$10$QXqKyowmlN6i3Yc5uBybfe3kK2Rb8NCIKsbGm5Hb2yZTjvVczmvX6', 'Cleaner', 'active', '2025-05-12 19:10:24'),
+(12, 'maria_gomez', 'maria.gomez@example.com', '$2y$10$QXqKyowmlN6i3Yc5uBybfe3kK2Rb8NCIKsbGm5Hb2yZTjvVczmvX6', 'Cleaner', 'active', '2025-05-12 19:10:24'),
+(13, 'daniel_lee', 'daniel.lee@example.com', '$2y$10$QXqKyowmlN6i3Yc5uBybfe3kK2Rb8NCIKsbGm5Hb2yZTjvVczmvX6', 'Cleaner', 'active', '2025-05-12 19:10:24'),
+(14, 'sophia_tan', 'sophia.tan@example.com', '$2y$10$QXqKyowmlN6i3Yc5uBybfe3kK2Rb8NCIKsbGm5Hb2yZTjvVczmvX6', 'Cleaner', 'active', '2025-05-12 19:10:24'),
+(15, 'manager', 'manager@example.com', '$2y$10$JTH95rzGf0luM4Vole867OHcoLtvjjO5hnySBvrlweI3s8Y6E8Az6', 'Manager', 'active', '2025-05-12 19:10:24');
 
 --
 -- Indexes for dumped tables
 --
 
 --
--- Indexes for table `confirmed_matches`
+-- Indexes for table `match_history`
 --
-ALTER TABLE `confirmed_matches`
+ALTER TABLE `match_history`
   ADD PRIMARY KEY (`matchid`),
   ADD KEY `cleanerid` (`cleanerid`),
   ADD KEY `homeownerid` (`homeownerid`),
@@ -182,46 +222,46 @@ ALTER TABLE `users`
 --
 
 --
--- AUTO_INCREMENT for table `confirmed_matches`
+-- AUTO_INCREMENT for table `match_history`
 --
-ALTER TABLE `confirmed_matches`
-  MODIFY `matchid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+ALTER TABLE `match_history`
+  MODIFY `matchid` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `services`
 --
 ALTER TABLE `services`
-  MODIFY `serviceid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `serviceid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `service_categories`
 --
 ALTER TABLE `service_categories`
-  MODIFY `categoryid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `categoryid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `shortlists`
 --
 ALTER TABLE `shortlists`
-  MODIFY `shortlistid` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `shortlistid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `userid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `userid` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- Constraints for dumped tables
 --
 
 --
--- Constraints for table `confirmed_matches`
+-- Constraints for table `match_history`
 --
-ALTER TABLE `confirmed_matches`
-  ADD CONSTRAINT `confirmed_matches_ibfk_1` FOREIGN KEY (`cleanerid`) REFERENCES `users` (`userid`),
-  ADD CONSTRAINT `confirmed_matches_ibfk_2` FOREIGN KEY (`homeownerid`) REFERENCES `users` (`userid`),
-  ADD CONSTRAINT `confirmed_matches_ibfk_3` FOREIGN KEY (`serviceid`) REFERENCES `services` (`serviceid`);
+ALTER TABLE `match_history`
+  ADD CONSTRAINT `match_history_ibfk_1` FOREIGN KEY (`cleanerid`) REFERENCES `users` (`userid`),
+  ADD CONSTRAINT `match_history_ibfk_2` FOREIGN KEY (`homeownerid`) REFERENCES `users` (`userid`),
+  ADD CONSTRAINT `match_history_ibfk_3` FOREIGN KEY (`serviceid`) REFERENCES `services` (`serviceid`);
 
 --
 -- Constraints for table `services`
