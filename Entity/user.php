@@ -29,10 +29,10 @@ class User
      * Create a new user.
      */
     public static function create(string $username, string $email, string $password, string $role): bool {
-        $conn = Database::connect();
+        $conn = Database::getConnection();
     
         // Step 1: Check if user already exists
-        $checkSql = "SELECT id FROM users WHERE username = ? OR email = ?";
+        $checkSql = "SELECT userid FROM users WHERE username = ? OR email = ?";
         $stmt = $conn->prepare($checkSql);
         if (!$stmt) {
             error_log("Prepare failed: " . $conn->error);

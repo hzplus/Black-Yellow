@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once DIR . '/../../Controller/admin/createUserController.php';
+require_once __DIR__ . '/../../Controller/admin/createUserController.php';
 
 // Access control
 if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Admin') {
