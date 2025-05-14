@@ -1,4 +1,7 @@
 <?php
+// Start output buffering at the top of the file to capture unwanted debug output
+ob_start();
+
 session_start();
 
 // Redirect if not logged in
@@ -40,11 +43,16 @@ $isShortlisted = $controller->isShortlisted($cleanerId, $homeownerId);
 
 // Handle shortlist toggle if form submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_shortlist'])) {
+    // Fix the parameter order for toggle function
     $controller->toggleShortlist($cleanerId, $homeownerId);
+    
     // Refresh page to update shortlist status
     header("Location: ViewCleanerProfile.php?id=$cleanerId");
     exit();
 }
+
+// Clear the output buffer to remove any debug output
+ob_end_clean();
 ?>
 
 <!DOCTYPE html>
@@ -55,51 +63,163 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_shortlist'])) 
     <title><?php echo htmlspecialchars($cleaner->getName()); ?> - Cleaner Profile</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <style>
+        .profile-container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        
+        .profile-card {
+            background-color: #1a1a1a; /* Dark background */
+            color: #e0e0e0; /* Light text */
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+        }
+        
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            text-decoration: none;
+            color: #FFD700; /* Gold color */
+            font-weight: bold;
+        }
+        
+        .profile-header-section {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            gap: 30px;
+        }
+        
+        .profile-picture-container {
+            flex: 0 0 150px; /* Fixed width for profile picture */
+        }
+        
+        .profile-picture {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 3px solid #FFD700;
+        }
+        
+        .profile-header-content {
+            flex: 1;
+        }
+        
+        .profile-header {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #FFD700; /* Gold color */
+        }
+        
+        .profile-info {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
         .shortlist-btn {
+            padding: 10px 20px;
+            background-color: #FFD700;
+            color: #333;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
             transition: all 0.3s ease;
         }
+        
+        .shortlist-btn.remove {
+            background-color: #f44336;
+            color: white;
+        }
+        
         .shortlist-btn:hover {
             transform: scale(1.05);
         }
+        
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #FFD700; /* Gold color */
+            border-bottom: 2px solid #FFD700;
+            padding-bottom: 8px;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
         .service-box {
             transition: all 0.3s ease;
             display: block;
             text-decoration: none;
             color: inherit;
-            border: 1px solid #e0e0e0;
+            border: 1px solid #444;
             border-radius: 8px;
             padding: 15px;
-            margin-bottom: 15px;
-            background-color: #f9f9f9;
+            background-color: #252525; /* Slightly lighter than background */
         }
+        
         .service-box:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border-color: #FFD700;
         }
+        
         .service-icon {
             font-size: 24px;
             margin-bottom: 10px;
-            color: #4a90e2;
+            color: #FFD700; /* Gold color */
         }
+        
         .service-title {
             font-weight: bold;
             margin-bottom: 5px;
+            color: #ffffff;
         }
+        
         .service-price {
             font-size: 18px;
-            color: #2ecc71;
+            color: #4cd964; /* Green color */
             margin-bottom: 5px;
         }
+        
         .service-category {
-            color: #7f8c8d;
+            color: #999;
             font-size: 14px;
+        }
+        
+        .contact-section {
+            border-top: 1px solid #444;
+            padding-top: 20px;
+        }
+        
+        @media (max-width: 767px) {
+            .profile-header-section {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .profile-picture-container {
+                margin-bottom: 20px;
+            }
+            
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
 
-<!-- Include the header -->
-<?php include '../../assets/includes/header.php'; ?>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/homeowner-header.php'; ?>
 
 <div class="profile-container">
     <div class="profile-card">
@@ -120,6 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_shortlist'])) 
                 </div>
                 
                 <div id="shortlist-container">
+                    <!-- Fixed form that uses direct POST submission, not AJAX -->
                     <form method="POST" id="shortlist-form" class="shortlist-form">
                         <input type="hidden" name="toggle_shortlist" value="1">
                         
@@ -172,41 +293,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_shortlist'])) 
         </div>
     </div>
 </div>
-
-<script>
-    // Enhanced shortlist button
-    document.addEventListener('DOMContentLoaded', function() {
-        const shortlistForm = document.getElementById('shortlist-form');
-        const shortlistBtn = document.getElementById('shortlist-btn');
-        
-        shortlistForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Visual feedback
-            shortlistBtn.disabled = true;
-            shortlistBtn.textContent = shortlistBtn.classList.contains('remove') ? 'Removing...' : 'Adding...';
-            
-            // Submit form
-            fetch(shortlistForm.action, {
-                method: 'POST',
-                body: new FormData(shortlistForm)
-            })
-            .then(response => response.json().catch(() => ({})))
-            .then(data => {
-                // Toggle button appearance
-                shortlistBtn.classList.toggle('remove');
-                shortlistBtn.textContent = shortlistBtn.classList.contains('remove') ? 'Remove from Shortlist' : 'Add to Shortlist';
-                shortlistBtn.disabled = false;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                shortlistBtn.disabled = false;
-                // Just submit the form normally if there's an error
-                shortlistForm.submit();
-            });
-        });
-    });
-</script>
 
 </body>
 </html>

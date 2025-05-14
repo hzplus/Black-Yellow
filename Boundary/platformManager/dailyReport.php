@@ -21,11 +21,6 @@ $selectedDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 $report = $controller->generateReport($selectedDate);
 
 // Calculate totals
-$totalBookings = 0;
-foreach ($report['bookings'] as $booking) {
-    $totalBookings += $booking['count'];
-}
-
 $totalNewServices = 0;
 foreach ($report['new_services'] as $service) {
     $totalNewServices += $service['count'];
@@ -35,6 +30,10 @@ $totalNewUsers = 0;
 foreach ($report['new_users'] as $user) {
     $totalNewUsers += $user['count'];
 }
+
+$activeCategories = count(array_filter($report['categories_usage'], function($cat) {
+    return $cat['service_count'] > 0;
+}));
 ?>
 
 <!DOCTYPE html>
@@ -44,14 +43,13 @@ foreach ($report['new_users'] as $user) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Report | Service Platform</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
-    <!-- Add Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* Custom styles for enhanced reports */
         .report-container {
             max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
         
         .report-header {
@@ -78,30 +76,33 @@ foreach ($report['new_users'] as $user) {
         }
         
         .report-nav a {
-            background-color: #222;
+            background-color: #252525;
             color: #FFD700;
-            padding: 8px 15px;
+            padding: 10px 18px;
             border-radius: 5px;
             text-decoration: none;
-            border: 1px solid #FFD700;
+            border: 1px solid #444;
             display: flex;
             align-items: center;
             gap: 5px;
             transition: all 0.3s ease;
+            font-weight: 500;
         }
         
         .report-nav a:hover {
-            background-color: #FFD700;
-            color: #000;
+            background-color: rgba(255, 215, 0, 0.1);
+            border-color: #FFD700;
+            transform: translateY(-2px);
         }
         
         .report-nav a.active {
-            background-color: #FFD700;
-            color: #000;
+            background-color: rgba(255, 215, 0, 0.15);
+            color: #FFD700;
+            border-color: #FFD700;
         }
         
         .date-selector {
-            background-color: #222;
+            background-color: #1a1a1a;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 25px;
@@ -130,7 +131,7 @@ foreach ($report['new_users'] as $user) {
         
         .date-selector input[type="date"] {
             padding: 10px;
-            background-color: #111;
+            background-color: #252525;
             border: 1px solid #444;
             color: #fff;
             border-radius: 4px;
@@ -152,6 +153,7 @@ foreach ($report['new_users'] as $user) {
         
         .date-selector button:hover {
             background-color: #e6c200;
+            transform: translateY(-2px);
         }
         
         .stats-grid {
@@ -162,8 +164,8 @@ foreach ($report['new_users'] as $user) {
         }
         
         .stat-card {
-            background-color: #111;
-            border: 1px solid #333;
+            background-color: #1a1a1a;
+            border: 1px solid #444;
             border-radius: 8px;
             padding: 25px 20px;
             text-align: center;
@@ -203,24 +205,24 @@ foreach ($report['new_users'] as $user) {
         
         .stat-label {
             font-size: 16px;
-            color: #ccc;
+            color: #e0e0e0;
         }
         
         .report-section {
-            background-color: #111;
-            border: 1px solid #333;
+            background-color: #1a1a1a;
+            border: 1px solid #444;
             border-radius: 8px;
             margin-bottom: 25px;
             overflow: hidden;
         }
         
         .section-header {
-            background-color: #222;
+            background-color: #252525;
             padding: 15px 20px;
             color: #FFD700;
             font-weight: bold;
             font-size: 18px;
-            border-bottom: 1px solid #333;
+            border-bottom: 1px solid #444;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -237,7 +239,7 @@ foreach ($report['new_users'] as $user) {
         }
         
         .data-table th {
-            background-color: #222;
+            background-color: #252525;
             color: #FFD700;
             text-align: left;
             padding: 12px 15px;
@@ -248,7 +250,7 @@ foreach ($report['new_users'] as $user) {
         .data-table td {
             padding: 12px 15px;
             border-bottom: 1px solid #333;
-            color: #fff;
+            color: #e0e0e0;
         }
         
         .data-table tr:last-child td {
@@ -256,7 +258,7 @@ foreach ($report['new_users'] as $user) {
         }
         
         .data-table tr:hover td {
-            background-color: #1a1a1a;
+            background-color: #252525;
         }
         
         .empty-data {
@@ -289,10 +291,11 @@ foreach ($report['new_users'] as $user) {
         
         .btn-print:hover {
             background-color: #e6c200;
+            transform: translateY(-2px);
         }
         
         .btn-back {
-            background-color: #222;
+            background-color: #252525;
             color: #FFD700;
             border: 1px solid #FFD700;
             padding: 12px 24px;
@@ -306,9 +309,11 @@ foreach ($report['new_users'] as $user) {
         }
         
         .btn-back:hover {
-            background-color: #333;
+            background-color: rgba(255, 215, 0, 0.1);
+            transform: translateY(-2px);
         }
         
+        /* Print Styles */
         @media print {
             body {
                 background-color: white !important;
@@ -377,6 +382,7 @@ foreach ($report['new_users'] as $user) {
             }
         }
         
+        /* Responsive Adjustments */
         @media (max-width: 768px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -400,22 +406,8 @@ foreach ($report['new_users'] as $user) {
 </head>
 <body>
 
-<div class="topbar">
-    <div>
-        Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!
-    </div>
-    <a href="../../logout.php" class="logout">Logout</a>
-</div>
-
-<div class="logo">
-    <img src="../../assets/images/logo.jpg" alt="Logo">
-</div>
-
-<div class="navbar">
-    <a href="managerDashboard.php">Home</a>
-    <a href="categoriesMenu.php">Service Categories</a>
-    <a href="reportsMenu.php">Reports</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/manager-header.php'; ?>
 
 <div class="report-container">
     <div class="report-header">
@@ -451,14 +443,6 @@ foreach ($report['new_users'] as $user) {
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon">
-                <i class="fas fa-calendar-check"></i>
-            </div>
-            <div class="stat-value"><?= $totalBookings ?></div>
-            <div class="stat-label">Total Bookings</div>
-        </div>
-        
-        <div class="stat-card">
-            <div class="stat-icon">
                 <i class="fas fa-concierge-bell"></i>
             </div>
             <div class="stat-value"><?= $totalNewServices ?></div>
@@ -471,6 +455,14 @@ foreach ($report['new_users'] as $user) {
             </div>
             <div class="stat-value"><?= $totalNewUsers ?></div>
             <div class="stat-label">New Users</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-th-list"></i>
+            </div>
+            <div class="stat-value"><?= $activeCategories ?></div>
+            <div class="stat-label">Active Categories</div>
         </div>
     </div>
     
@@ -488,7 +480,6 @@ foreach ($report['new_users'] as $user) {
                         <tr>
                             <th>Category</th>
                             <th>Service Count</th>
-                            <th>Booking Count</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -496,36 +487,6 @@ foreach ($report['new_users'] as $user) {
                             <tr>
                                 <td><?= htmlspecialchars($category['category_name']) ?></td>
                                 <td><?= $category['service_count'] ?></td>
-                                <td><?= $category['booking_count'] ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-    </div>
-    
-    <!-- Bookings Section -->
-    <div class="report-section">
-        <div class="section-header">
-            <i class="fas fa-calendar-check"></i> Bookings by Category
-        </div>
-        <div class="table-container">
-            <?php if (empty($report['bookings']) || array_sum(array_column($report['bookings'], 'count')) == 0): ?>
-                <div class="empty-data">No bookings data available for this date</div>
-            <?php else: ?>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th>Number of Bookings</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($report['bookings'] as $booking): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($booking['category']) ?></td>
-                                <td><?= $booking['count'] ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -551,12 +512,22 @@ foreach ($report['new_users'] as $user) {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($report['new_users'] as $user): ?>
+                        <?php 
+                        $hasRegistrations = false;
+                        foreach ($report['new_users'] as $user): 
+                            if ($user['count'] > 0) $hasRegistrations = true;
+                        ?>
                             <tr>
                                 <td><?= htmlspecialchars($user['role']) ?></td>
                                 <td><?= $user['count'] ?></td>
                             </tr>
                         <?php endforeach; ?>
+                        
+                        <?php if (!$hasRegistrations): ?>
+                            <tr>
+                                <td colspan="2" class="empty-data">No new user registrations for this date</td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             <?php endif; ?>
@@ -580,12 +551,22 @@ foreach ($report['new_users'] as $user) {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($report['new_services'] as $service): ?>
+                        <?php 
+                        $hasServices = false;
+                        foreach ($report['new_services'] as $service): 
+                            if ($service['count'] > 0) $hasServices = true;
+                        ?>
                             <tr>
                                 <td><?= htmlspecialchars($service['category']) ?></td>
                                 <td><?= $service['count'] ?></td>
                             </tr>
                         <?php endforeach; ?>
+                        
+                        <?php if (!$hasServices): ?>
+                            <tr>
+                                <td colspan="2" class="empty-data">No new services created for this date</td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             <?php endif; ?>
@@ -601,6 +582,21 @@ foreach ($report['new_users'] as $user) {
         </a>
     </div>
 </div>
+
+<script>
+// Add time parameter to prevent caching when generating reports
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.date-selector form');
+    form.addEventListener('submit', function(e) {
+        // Add a timestamp to prevent caching
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'timestamp';
+        hiddenInput.value = new Date().getTime();
+        this.appendChild(hiddenInput);
+    });
+});
+</script>
 
 </body>
 </html>

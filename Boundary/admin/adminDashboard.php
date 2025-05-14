@@ -17,22 +17,8 @@ if (!isset($_SESSION['username'])) {
 </head>
 <body>
 
-<!-- Topbar with logo and welcome message -->
-<div class="topbar">
-    <div class="logo">
-        <img src="../../assets/images/logo.jpg" alt="Black&Yellow Logo">
-    <div>
-        Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!
-    </div>
-</div>
-
-<!-- Navigation bar -->
-<div class="navbar">
-    <a href="adminDashboard.php">Home</a>
-    <a href="userAccountsMenu.php">User Accounts</a>
-    <a href="userProfilesMenu.php">User Profiles</a>
-    <a href="../../logout.php">Logout</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/admin-header.php'; ?>
 
 <!-- Dashboard content -->
 <div class="dashboard-content">

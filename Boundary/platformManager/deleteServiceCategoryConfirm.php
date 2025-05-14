@@ -11,7 +11,7 @@ if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Manager') {
 }
 
 if (!isset($_GET['category_id'])) {
-    header("Location: viewServiceCategory.php?error=missing_id");
+    header("Location: deleteServiceCategory.php?error=missing_id");
     exit();
 }
 
@@ -19,7 +19,7 @@ $controller = new ViewServiceCategoryController();
 $category = $controller->getCategoryById($_GET['category_id']);
 
 if (!$category) {
-    header("Location: viewServiceCategory.php?error=not_found");
+    header("Location: deleteServiceCategory.php?error=not_found");
     exit();
 }
 ?>
@@ -84,6 +84,7 @@ if (!$category) {
             align-items: center;
             gap: 5px;
             transition: background-color 0.3s;
+            text-decoration: none;
         }
         
         .delete-btn:hover {
@@ -111,23 +112,8 @@ if (!$category) {
     </style>
 </head>
 <body>
-
-<div class="topbar">
-    <div>
-        Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!
-    </div>
-    <a href="../../logout.php" class="logout">Logout</a>
-</div>
-
-<div class="logo">
-    <img src="../../assets/images/logo.jpg" alt="Logo">
-</div>
-
-<div class="navbar">
-    <a href="managerDashboard.php">Home</a>
-    <a href="categoriesMenu.php">Service Categories</a>
-    <a href="reportsMenu.php">Reports</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/manager-header.php'; ?>
 
 <div class="confirm-container">
     <div class="warning-icon">
@@ -142,10 +128,10 @@ if (!$category) {
     </p>
     
     <div class="button-group">
-        <a href="deleteServiceCategory.php?category_id=<?= $category['categoryid'] ?>" class="delete-btn">
+        <a href="deleteServiceCategory.php?category_id=<?= $category['categoryid'] ?>&confirm=yes" class="delete-btn">
             <i class="fas fa-trash"></i> Yes, Delete
         </a>
-        <a href="viewServiceCategory.php" class="cancel-btn">
+        <a href="deleteServiceCategory.php" class="cancel-btn">
             <i class="fas fa-times"></i> Cancel
         </a>
     </div>

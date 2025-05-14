@@ -19,6 +19,17 @@ $selectedDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 
 // Generate the report
 $report = $controller->generateReport($selectedDate);
+
+// Calculate totals
+$totalNewServices = 0;
+foreach ($report['new_services'] as $service) {
+    $totalNewServices += $service['count'];
+}
+
+$totalNewUsers = 0;
+foreach ($report['new_users'] as $user) {
+    $totalNewUsers += $user['count'];
+}
 ?>
 
 <!DOCTYPE html>
@@ -26,281 +37,569 @@ $report = $controller->generateReport($selectedDate);
 <head>
     <title>Weekly Report</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .report-section {
-            margin-bottom: 30px;
-            border: 1px solid #ddd;
-            padding: 15px;
+        /* Custom styles for enhanced reports */
+        .report-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .report-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #FFD700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .report-nav {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .report-nav a {
+            background-color: #252525;
+            color: #FFD700;
+            padding: 10px 18px;
             border-radius: 5px;
+            text-decoration: none;
+            border: 1px solid #444;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
-        .report-section h2 {
-            margin-top: 0;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
+        
+        .report-nav a:hover {
+            background-color: rgba(255, 215, 0, 0.1);
+            border-color: #FFD700;
+            transform: translateY(-2px);
         }
+        
+        .report-nav a.active {
+            background-color: rgba(255, 215, 0, 0.15);
+            color: #FFD700;
+            border-color: #FFD700;
+        }
+        
+        .date-selector {
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #444;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .date-selector form {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        
+        .date-selector label {
+            color: #FFD700;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .date-selector input[type="date"] {
+            padding: 10px;
+            background-color: #252525;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+        }
+        
+        .date-selector button {
+            background-color: #FFD700;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .date-selector button:hover {
+            background-color: #e6c200;
+            transform: translateY(-2px);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background-color: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 25px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: #FFD700;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #FFD700;
+        }
+        
+        .stat-icon {
+            font-size: 32px;
+            color: #FFD700;
+            margin-bottom: 15px;
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 16px;
+            color: #e0e0e0;
+        }
+        
+        .report-section {
+            background-color: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .section-header {
+            background-color: #252525;
+            padding: 15px 20px;
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 18px;
+            border-bottom: 1px solid #444;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .table-container {
+            padding: 5px;
+            overflow-x: auto;
+        }
+        
         .data-table {
             width: 100%;
             border-collapse: collapse;
         }
-        .data-table th, .data-table td {
-            padding: 8px;
-            border: 1px solid #ddd;
-        }
+        
         .data-table th {
-            background-color: #f5f5f5;
-        }
-        .date-picker {
-            margin-bottom: 20px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 5px;
-            text-align: center;
-        }
-        .stat-card h3 {
-            margin-top: 0;
-            font-size: 1em;
-        }
-        .stat-card .number {
-            font-size: 2em;
+            background-color: #252525;
+            color: #FFD700;
+            text-align: left;
+            padding: 12px 15px;
             font-weight: bold;
-            margin: 10px 0;
+            border-bottom: 1px solid #444;
         }
-        .print-button {
+        
+        .data-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #333;
+            color: #e0e0e0;
+        }
+        
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .data-table tr:hover td {
+            background-color: #252525;
+        }
+        
+        .empty-data {
+            padding: 25px;
+            text-align: center;
+            color: #888;
+            font-style: italic;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
             margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #333;
-            color: white;
+            margin-bottom: 10px;
+        }
+        
+        .btn-print {
+            background-color: #FFD700;
+            color: #000;
             border: none;
+            padding: 12px 24px;
             border-radius: 5px;
             cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
         }
+        
+        .btn-print:hover {
+            background-color: #e6c200;
+            transform: translateY(-2px);
+        }
+        
+        .btn-back {
+            background-color: #252525;
+            color: #FFD700;
+            border: 1px solid #FFD700;
+            padding: 12px 24px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-back:hover {
+            background-color: rgba(255, 215, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .weekly-badge {
+            background-color: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        
+        /* Print Styles */
         @media print {
-            .no-print {
-                display: none;
+            body {
+                background-color: white !important;
+                color: black !important;
             }
-            .navbar, .topbar, .logo {
-                display: none;
+            
+            .topbar, .navbar, .logo, .date-selector, .report-nav, .action-buttons {
+                display: none !important;
             }
-            .dashboard-content {
-                margin: 0;
+            
+            .report-container {
                 padding: 0;
+                margin: 0;
+            }
+            
+            .report-title {
+                color: black;
+                text-align: center;
+                margin-bottom: 30px;
+            }
+            
+            .stat-card {
+                background-color: white;
+                border: 1px solid #ddd;
+                break-inside: avoid;
+            }
+            
+            .stat-value {
+                color: black;
+            }
+            
+            .stat-label, .stat-icon {
+                color: #555;
+            }
+            
+            .report-section {
+                background-color: white;
+                border: 1px solid #ddd;
+                break-inside: avoid;
+                margin-bottom: 15px;
+            }
+            
+            .section-header {
+                background-color: #f5f5f5;
+                color: black;
+                border-bottom: 1px solid #ddd;
+            }
+            
+            .data-table th {
+                background-color: #f5f5f5;
+                color: black;
+                border-bottom: 1px solid #ddd;
+            }
+            
+            .data-table td {
+                color: black;
+                border-bottom: 1px solid #ddd;
+            }
+            
+            .data-table tr:hover td {
+                background-color: transparent;
+            }
+            
+            .empty-data {
+                color: #777;
+            }
+            
+            .weekly-badge {
+                background-color: #f5f5f5;
+                color: black;
+                border: 1px solid #ddd;
+            }
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .report-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .date-selector form {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
             }
         }
     </style>
 </head>
 <body>
 
-<div class="topbar no-print">
-    Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!
-    <a href="../../logout.php" class="logout-link">Logout</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/manager-header.php'; ?>
 
-<div class="logo no-print">
-    <img src="../../assets/images/logo.jpg" alt="Logo">
-</div>
-
-<div class="navbar no-print">
-    <a href="managerDashboard.php">Home</a>
-    <a href="categoriesMenu.php">Service Categories</a>
-    <a href="reportsMenu.php">Reports</a>
-</div>
-
-<div class="dashboard-content">
-    <h1>Weekly Report - <?= date('F j', strtotime($report['start_date'])) ?> to <?= date('F j, Y', strtotime($report['end_date'])) ?></h1>
+<div class="report-container">
+    <div class="report-header">
+        <h1 class="report-title">
+            <i class="fas fa-calendar-week"></i> Weekly Report - <?= date('F j', strtotime($report['start_date'])) ?> to <?= date('F j, Y', strtotime($report['end_date'])) ?>
+        </h1>
+        
+        <div class="report-nav">
+            <a href="dailyReport.php">
+                <i class="fas fa-calendar-day"></i> Daily
+            </a>
+            <a href="weeklyReport.php" class="active">
+                <i class="fas fa-calendar-week"></i> Weekly
+            </a>
+            <a href="monthlyReport.php">
+                <i class="fas fa-calendar-alt"></i> Monthly
+            </a>
+        </div>
+    </div>
     
-    <div class="date-picker no-print">
-        <form method="GET">
-            <label for="date">Select Week (any date in the week):</label>
+    <div class="date-selector">
+        <form method="GET" action="<?= $_SERVER['PHP_SELF'] ?>">
+            <label for="date">
+                <i class="fas fa-calendar-alt"></i> Select Week (any date in the week):
+            </label>
             <input type="date" id="date" name="date" value="<?= $selectedDate ?>" max="<?= date('Y-m-d') ?>">
-            <button type="submit">Generate Report</button>
+            <button type="submit">
+                <i class="fas fa-sync-alt"></i> Generate Report
+            </button>
         </form>
     </div>
     
     <div class="stats-grid">
-        <?php
-        // Calculate total bookings
-        $totalBookings = 0;
-        foreach ($report['bookings'] as $booking) {
-            $totalBookings += $booking['count'];
-        }
-        
-        // Calculate total new services
-        $totalNewServices = 0;
-        foreach ($report['new_services'] as $service) {
-            $totalNewServices += $service['count'];
-        }
-        
-        // Calculate total new users
-        $totalNewUsers = 0;
-        foreach ($report['new_users'] as $user) {
-            $totalNewUsers += $user['count'];
-        }
-        ?>
-        
         <div class="stat-card">
-            <h3>Total Bookings</h3>
-            <div class="number"><?= $totalBookings ?></div>
+            <div class="stat-icon">
+                <i class="fas fa-concierge-bell"></i>
+            </div>
+            <div class="stat-value"><?= $totalNewServices ?></div>
+            <div class="stat-label">New Services</div>
         </div>
         
         <div class="stat-card">
-            <h3>New Services</h3>
-            <div class="number"><?= $totalNewServices ?></div>
+            <div class="stat-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="stat-value"><?= $totalNewUsers ?></div>
+            <div class="stat-label">New Users</div>
         </div>
         
         <div class="stat-card">
-            <h3>New Users</h3>
-            <div class="number"><?= $totalNewUsers ?></div>
+            <div class="stat-icon">
+                <i class="fas fa-th-list"></i>
+            </div>
+            <div class="stat-value"><?= count($report['categories_usage']) ?></div>
+            <div class="stat-label">Active Categories</div>
         </div>
     </div>
     
     <!-- Daily Breakdown Section -->
     <div class="report-section">
-        <h2>Daily Booking Activity</h2>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Number of Bookings</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($report['daily_breakdown'])): ?>
-                    <tr>
-                        <td colspan="2">No booking data available for this week</td>
-                    </tr>
-                <?php else: ?>
-                    <?php foreach ($report['daily_breakdown'] as $day): ?>
+        <div class="section-header">
+            <i class="fas fa-chart-bar"></i> Daily Activity
+        </div>
+        <div class="table-container">
+            <?php if (empty($report['daily_breakdown'])): ?>
+                <div class="empty-data">No data available for this week</div>
+            <?php else: ?>
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <td><?= date('l, F j, Y', strtotime($day['date'])) ?></td>
-                            <td><?= $day['booking_count'] ?></td>
+                            <th>Date</th>
+                            <th>New Services</th>
+                            <th>New Users</th>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($report['daily_breakdown'] as $day): ?>
+                            <tr>
+                                <td><?= date('l, F j, Y', strtotime($day['date'])) ?></td>
+                                <td><?= $day['new_services_count'] ?? 0 ?></td>
+                                <td><?= $day['new_users_count'] ?? 0 ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
     </div>
     
     <!-- Category Usage Section -->
     <div class="report-section">
-        <h2>Service Category Usage</h2>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th>Service Count</th>
-                    <th>Booking Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($report['categories_usage'])): ?>
-                    <tr>
-                        <td colspan="3">No category usage data available for this week</td>
-                    </tr>
-                <?php else: ?>
-                    <?php foreach ($report['categories_usage'] as $category): ?>
+        <div class="section-header">
+            <i class="fas fa-th-list"></i> Service Category Usage
+        </div>
+        <div class="table-container">
+            <?php if (empty($report['categories_usage'])): ?>
+                <div class="empty-data">No category usage data available for this week</div>
+            <?php else: ?>
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <td><?= htmlspecialchars($category['category_name']) ?></td>
-                            <td><?= $category['service_count'] ?></td>
-                            <td><?= $category['booking_count'] ?></td>
+                            <th>Category</th>
+                            <th>Service Count</th>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
-    
-    <!-- Bookings Section -->
-    <div class="report-section">
-        <h2>Bookings by Category</h2>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th>Number of Bookings</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($report['bookings'])): ?>
-                    <tr>
-                        <td colspan="2">No bookings data available for this week</td>
-                    </tr>
-                <?php else: ?>
-                    <?php foreach ($report['bookings'] as $booking): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($booking['category']) ?></td>
-                            <td><?= $booking['count'] ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($report['categories_usage'] as $category): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($category['category_name']) ?></td>
+                                <td><?= $category['service_count'] ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
     </div>
     
     <!-- New Users Section -->
     <div class="report-section">
-        <h2>New User Registrations</h2>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>User Role</th>
-                    <th>Number of Registrations</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($report['new_users'])): ?>
-                    <tr>
-                        <td colspan="2">No new user registrations for this week</td>
-                    </tr>
-                <?php else: ?>
-                    <?php foreach ($report['new_users'] as $user): ?>
+        <div class="section-header">
+            <i class="fas fa-user-plus"></i> New User Registrations
+        </div>
+        <div class="table-container">
+            <?php if (empty($report['new_users'])): ?>
+                <div class="empty-data">No new user registrations for this week</div>
+            <?php else: ?>
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <td><?= htmlspecialchars($user['role']) ?></td>
-                            <td><?= $user['count'] ?></td>
+                            <th>User Role</th>
+                            <th>Number of Registrations</th>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($report['new_users'] as $user): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($user['role']) ?></td>
+                                <td><?= $user['count'] ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
     </div>
     
     <!-- New Services Section -->
     <div class="report-section">
-        <h2>New Services Created</h2>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th>Number of Services</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($report['new_services'])): ?>
-                    <tr>
-                        <td colspan="2">No new services created for this week</td>
-                    </tr>
-                <?php else: ?>
-                    <?php foreach ($report['new_services'] as $service): ?>
+        <div class="section-header">
+            <i class="fas fa-concierge-bell"></i> New Services Created
+        </div>
+        <div class="table-container">
+            <?php if (empty($report['new_services'])): ?>
+                <div class="empty-data">No new services created for this week</div>
+            <?php else: ?>
+                <table class="data-table">
+                    <thead>
                         <tr>
-                            <td><?= htmlspecialchars($service['category']) ?></td>
-                            <td><?= $service['count'] ?></td>
+                            <th>Category</th>
+                            <th>Number of Services</th>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($report['new_services'] as $service): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($service['category']) ?></td>
+                                <td><?= $service['count'] ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
     </div>
     
-    <div class="no-print">
-        <button onclick="window.print();" class="print-button">Print Report</button>
-        <a href="reportsMenu.php" class="button">Back to Reports</a>
+    <div class="action-buttons">
+        <button onclick="window.print();" class="btn-print">
+            <i class="fas fa-print"></i> Print Report
+        </button>
+        <a href="reportsMenu.php" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Reports
+        </a>
     </div>
 </div>
 

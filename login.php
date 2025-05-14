@@ -42,54 +42,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Black&Yellow</title>
+    <title>Login - Black&Yellow Cleaning Services</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <div class="logo">
-                <img src="assets/images/logo.jpg" alt="Black&Yellow Logo">
+    <div class="login-page">
+        <div class="login-container">
+            <div class="login-box">
+                <div class="logo-container">
+                    <img src="assets/images/logo.jpg" alt="Black&Yellow Logo">
+                    <h1 class="login-title">Black&Yellow</h1>
+                    <p class="login-subtitle">Cleaning Service Platform</p>
+                </div>
+                
+                <?php if (!empty($message)): ?>
+                    <div class="alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <?php echo htmlspecialchars($message); ?>
+                    </div>
+                <?php endif; ?>
+                
+                <form method="POST" action="">
+                    <div class="role-selector">
+                        <i class="fas fa-user-tag icon"></i>
+                        <select name="role" id="role" required>
+                            <option value="">Select Your Role</option>
+                            <option value="Admin">Administrator</option>
+                            <option value="Cleaner">Service Cleaner</option>
+                            <option value="Homeowner">Homeowner</option>
+                            <option value="Manager">Platform Manager</option>
+                        </select>
+                    </div>
+                    
+                    <div class="login-field">
+                        <label for="username">Username</label>
+                        <i class="fas fa-user icon"></i>
+                        <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                    </div>
+                    
+                    <div class="login-field">
+                        <label for="password">Password</label>
+                        <i class="fas fa-lock icon"></i>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                    
+                    <div class="login-actions">
+                        <button type="submit" class="login-btn">
+                            Login <i class="fas fa-sign-in-alt"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="register-link">
+                        Don't have an account? <a href="register.php">Register</a>
+                    </div>
+                </form>
             </div>
-            <h2>Black&Yellow Cleaning Services</h2>
             
-            <?php if (!empty($message)): ?>
-                <div class="error">
-                    <?php echo htmlspecialchars($message); ?>
-                </div>
-            <?php endif; ?>
-            
-            <form method="POST" class="login-form">
-                <div class="form-group">
-                    <label for="role">User Type</label>
-                    <select name="role" id="role" required>
-                        <option value="Admin">Admin</option>
-                        <option value="Cleaner">Cleaner</option>
-                        <option value="Homeowner">Homeowner</option>
-                        <option value="Manager">Manager</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit">Login</button>
-                    <a href="register.php"><button type="button">Register</button></a>
-                </div>
-            </form>
+            <div class="login-footer">
+                <p class="text-center text-muted">&copy; 2025 Black&Yellow Cleaning Services</p>
+            </div>
         </div>
     </div>
+
+    <script>
+        // Simple animation for form fields
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.login-field input, .role-selector select').forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentNode.classList.add('active');
+                });
+                
+                input.addEventListener('blur', function() {
+                    if (!this.value) {
+                        this.parentNode.classList.remove('active');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

@@ -2,13 +2,43 @@
 session_start();
 require_once '../../Controller/platformManager/deleteServiceCategoryController.php';
 
+// Verify user is logged in and has manager role
 if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Manager') {
     header("Location: ../../login.php");
     exit();
 }
 
+// Check if we're processing a deletion
+if (isset($_GET['category_id']) && isset($_GET['confirm']) && $_GET['confirm'] === 'yes') {
+    $categoryId = $_GET['category_id'];
+    
+    $controller = new DeleteServiceCategoryController();
+    $result = $controller->deleteCategory($categoryId);
+    
+    if ($result) {
+        // Success - redirect with success message
+        header("Location: deleteServiceCategory.php?success=1");
+    } else {
+        // Failure - redirect with error message
+        header("Location: deleteServiceCategory.php?error=in_use");
+    }
+    exit();
+}
+
+// Displaying the list of categories
 $controller = new DeleteServiceCategoryController();
 $categories = $controller->getAllCategories();
+
+// Flash messages
+$successMessage = '';
+$errorMessage = '';
+
+if (isset($_GET['success']) && $_GET['success'] == '1') {
+    $successMessage = "Category deleted successfully.";
+}
+if (isset($_GET['error']) && $_GET['error'] == 'in_use') {
+    $errorMessage = "Cannot delete category because it is in use by one or more services.";
+}
 ?>
 
 <!DOCTYPE html>
@@ -17,137 +47,234 @@ $categories = $controller->getAllCategories();
     <meta charset="UTF-8">
     <title>Delete Service Categories</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: black;
-            color: white;
+        .content-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
-        .header {
+        
+        .content-header {
             display: flex;
-            justify-content: flex-end;
-            padding: 10px 20px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
         }
-        .welcome-text {
-            color: white;
-        }
-        .logout-link {
-            color: purple;
-            text-decoration: none;
-            margin-left: 10px;
-        }
-        .logo-container {
-            padding: 10px;
-        }
-        .logo {
-            max-width: 100px;
-        }
-        .nav-bar {
-            background-color: #FFD700;
-            padding: 10px;
-            text-align: center;
-        }
-        .nav-link {
-            color: black;
-            text-decoration: none;
-            margin: 0 20px;
+        
+        .content-title {
+            color: #FFD700;
+            font-size: 28px;
             font-weight: bold;
         }
-        .content {
-            padding: 20px;
+        
+        .warning-box {
+            background-color: rgba(211, 47, 47, 0.1);
+            border: 1px solid #d32f2f;
+            color: #e57373;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
         }
-        h1 {
-            color: white;
-            margin-bottom: 20px;
+        
+        .warning-box i {
+            font-size: 24px;
+            margin-right: 15px;
         }
-        .warning {
-            color: red;
-            font-weight: bold;
-            margin-bottom: 15px;
+        
+        .success-box {
+            background-color: rgba(76, 175, 80, 0.1);
+            border: 1px solid #4CAF50;
+            color: #81C784;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
         }
-        table {
+        
+        .success-box i {
+            font-size: 24px;
+            margin-right: 15px;
+        }
+        
+        .error-box {
+            background-color: rgba(211, 47, 47, 0.1);
+            border: 1px solid #d32f2f;
+            color: #e57373;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .error-box i {
+            font-size: 24px;
+            margin-right: 15px;
+        }
+        
+        .search-container {
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #252525;
+            border-radius: 8px;
+            border: 1px solid #444;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            border-color: #FFD700;
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+            outline: none;
+        }
+        
+        .categories-table {
             width: 100%;
             border-collapse: collapse;
-            border: 1px solid white;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
-        th, td {
-            border: 1px solid white;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #000;
+        
+        .categories-table th {
+            background-color: #252525;
+            color: #FFD700;
             font-weight: bold;
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid #444;
         }
-        .action-link {
-            color: blue;
-            text-decoration: none;
+        
+        .categories-table td {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            color: #e0e0e0;
         }
-        .back-link {
-            color: purple;
-            text-decoration: none;
-            margin-top: 20px;
+        
+        .categories-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .categories-table tr:hover td {
+            background-color: #252525;
+        }
+        
+        .delete-link {
             display: inline-block;
+            padding: 8px 15px;
+            background-color: #e53935;
+            color: #fff;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
         }
-        #searchBox {
-            margin-bottom: 10px;
-            padding: 5px;
-            width: 250px;
+        
+        .delete-link:hover {
+            background-color: #c62828;
+            transform: translateY(-2px);
         }
-        #noResultsMessage {
-            color: red;
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 25px;
+            color: #FFD700;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        
+        .back-link:hover {
+            color: #e6c200;
+        }
+        
+        .back-link i {
+            margin-right: 5px;
+        }
+        
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: #e57373;
+            background-color: rgba(211, 47, 47, 0.1);
+            border: 1px solid #d32f2f;
+            border-radius: 5px;
+            margin-top: 15px;
             display: none;
         }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <span class="welcome-text">Welcome, manager!</span>
-    <a href="../../logout.php" class="logout-link">Logout</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/manager-header.php'; ?>
 
-<div class="logo-container">
-    <a href="managerDashboard.php">
-        <img src="../../assets/images/logo.jpg" alt="Logo" class="logo">
-    </a>
-</div>
-
-<div class="nav-bar">
-    <a href="managerDashboard.php" class="nav-link">Home</a>
-    <a href="categoriesMenu.php" class="nav-link">Service Categories</a>
-    <a href="reportsMenu.php" class="nav-link">Reports</a>
-</div>
-
-<div class="content">
-    <h1>Delete Service Categories</h1>
+<div class="content-container">
+    <div class="content-header">
+        <h1 class="content-title">Delete Service Categories</h1>
+    </div>
     
-    <p class="warning">Warning: Deleting a category that is in use by services is not allowed.</p>
+    <?php if (!empty($successMessage)): ?>
+    <div class="success-box">
+        <i class="fas fa-check-circle"></i>
+        <p><?= $successMessage ?></p>
+    </div>
+    <?php endif; ?>
     
-    <input type="text" id="searchBox" placeholder="Search by name..." onkeyup="filterCategories()">
+    <?php if (!empty($errorMessage)): ?>
+    <div class="error-box">
+        <i class="fas fa-exclamation-circle"></i>
+        <p><?= $errorMessage ?></p>
+    </div>
+    <?php endif; ?>
+    
+    <div class="warning-box">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>Warning: Deleting a category that is in use by services is not allowed. This action cannot be undone.</p>
+    </div>
+    
+    <div class="search-container">
+        <input type="text" id="searchBox" class="search-input" placeholder="Search by name..." onkeyup="filterCategories()">
+    </div>
 
-    <table id="categoryTable">
-        <tr>
-            <th>Category ID</th>
-            <th>Name</th>
-            <th>Created At</th>
-            <th>Action</th>
-        </tr>
-        <?php foreach ($categories as $category): ?>
+    <table id="categoryTable" class="categories-table">
+        <thead>
             <tr>
-                <td><?= htmlspecialchars($category['categoryid']) ?></td>
-                <td><?= htmlspecialchars($category['name']) ?></td>
-                <td><?= isset($category['created_at']) ? htmlspecialchars($category['created_at']) : date('Y-m-d H:i:s') ?></td>
-                <td><a href="deleteServiceCategoryConfirm.php?category_id=<?= $category['categoryid'] ?>" class="action-link">Delete</a></td>
+                <th>Category ID</th>
+                <th>Name</th>
+                <th>Created At</th>
+                <th>Action</th>
             </tr>
-        <?php endforeach; ?>
+        </thead>
+        <tbody>
+            <?php foreach ($categories as $category): ?>
+                <tr>
+                    <td><?= htmlspecialchars($category['categoryid']) ?></td>
+                    <td><?= htmlspecialchars($category['name']) ?></td>
+                    <td><?= isset($category['created_at']) ? htmlspecialchars($category['created_at']) : date('Y-m-d H:i:s') ?></td>
+                    <td><a href="deleteServiceCategoryConfirm.php?category_id=<?= $category['categoryid'] ?>" class="delete-link">Delete</a></td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
     </table>
 
-    <p id="noResultsMessage">No matching categories found.</p>
+    <p id="noResultsMessage" class="no-results">No matching categories found.</p>
     
-    <p><a href="categoriesMenu.php" class="back-link">← Back to Categories Menu</a></p>
+    <a href="categoriesMenu.php" class="back-link"><i class="fas fa-arrow-left"></i> Back to Categories Menu</a>
 </div>
 
 <!-- Live Search Script -->
@@ -156,7 +283,7 @@ function filterCategories() {
     const input = document.getElementById("searchBox").value.toUpperCase();
     const table = document.getElementById("categoryTable");
     const rows = table.getElementsByTagName("tr");
-
+    
     let visible = 0;
 
     // Start at index 1 to skip the header row

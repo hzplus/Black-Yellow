@@ -111,8 +111,8 @@ ob_clean();
 </head>
 <body>
 
-<!-- Include the header -->
-<?php include '../../assets/includes/header.php'; ?>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/homeowner-header.php'; ?>
 
 <div class="content-container">
     <a href="HomeownerDashboard.php" class="back-button">← Back to Dashboard</a>

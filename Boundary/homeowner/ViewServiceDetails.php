@@ -52,24 +52,6 @@ $cleaner = $controller->getCleanerById($service->getCleanerId());
 // Check if cleaner is shortlisted
 $isShortlisted = $controller->isCleanerShortlisted($service->getCleanerId(), $homeownerId);
 
-// Handle booking request
-// $bookingMessage = '';
-// if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_service'])) {
-//     $date = $_POST['booking_date'];
-//     $time = $_POST['booking_time'];
-//     $notes = $_POST['booking_notes'] ?? '';
-    
-//     $bookingDateTime = $date . ' ' . $time . ':00';
-    
-//     $result = $controller->bookService($homeownerId, $service->getCleanerId(), $serviceId, $bookingDateTime, $notes);
-    
-//     if ($result) {
-//         $bookingMessage = '<div class="alert success">Booking request submitted successfully!</div>';
-//     } else {
-//         $bookingMessage = '<div class="alert error">Failed to submit booking request. Please try again.</div>';
-//     }
-// }
-
 // Handle shortlist toggle
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_shortlist'])) {
     $controller->toggleShortlist($service->getCleanerId(), $homeownerId);
@@ -91,8 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_shortlist'])) 
 </head>
 <body>
 
-<!-- Include the header -->
-<?php include '../../assets/includes/header.php'; ?>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/homeowner-header.php'; ?>
 
 <div class="service-details-container">
     <div class="service-card">
@@ -160,38 +142,20 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 ?>
 
-        <div class="booking-section">
-                <?php if ($isLoggedIn && $isHomeowner): ?>
-                    <form method="POST" class="booking-form" action="bookService.php">
-                        <h2>Book This Service</h2>
-                        <input type="hidden" name="serviceid" value="<?= $service->getId() ?>">
-                        <input type="hidden" name="cleanerid" value="<?= $service->getCleanerId() ?>">
-
-                        <div class="form-group">
-                            <label for="booking_date">Preferred Date</label>
-                            <input type="date" id="booking_date" name="booking_date" required>
-                        </div>
- 
-                        
-                        <button type="submit" name="book_service" class="book-btn">
-                            <i class="fas fa-calendar-check"></i> Book Now
-                        </button>
-                    </form>
-                    
-                    <form method="POST">
-                        <input type="hidden" name="toggle_shortlist" value="1">
-                        <button type="submit" class="shortlist-btn <?php echo $isShortlisted ? 'remove' : ''; ?>">
-                            <i class="fas fa-bookmark"></i> 
-                            <?php echo $isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'; ?>
-                        </button>
-                    </form>
-                <?php else: ?>
-                    <div class="alert warning">
-                        <strong>Notice:</strong> Please <a href="/Black-Yellow/public/login.php" style="color: #FFD700;">log in</a> as a homeowner to book this service or add to shortlist.
-                    </div>
-                <?php endif; ?>
-            </div>
-    </div>
+<div class="booking-section">
+    <?php if ($isLoggedIn && $isHomeowner): ?>
+        <form method="POST">
+            <input type="hidden" name="toggle_shortlist" value="1">
+            <button type="submit" class="shortlist-btn <?php echo $isShortlisted ? 'remove' : ''; ?>">
+                <i class="fas fa-bookmark"></i> 
+                <?php echo $isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'; ?>
+            </button>
+        </form>
+    <?php else: ?>
+        <div class="alert warning">
+            <strong>Notice:</strong> Please <a href="/Black-Yellow/public/login.php" style="color: #FFD700;">log in</a> as a homeowner to add to shortlist.
+        </div>
+    <?php endif; ?>
 </div>
 
 <script>

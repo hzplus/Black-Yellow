@@ -917,42 +917,5 @@ class CleaningPlatformEntity {
             return [];
         }
     }
-    
-    /**
-     * Booking-related methods
-     */
-    
-    public function createBooking($homeownerId, $cleanerId, $serviceId, $bookingDateTime, $notes) {
-        try {
-            $conn = Database::getConnection();
-
-            $sql = "INSERT INTO bookings (homeownerid, cleanerid, serviceid, booking_date, notes, status, created_at) 
-                    VALUES (?, ?, ?, ?, ?, 'pending', NOW())";
-
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("iiiss", $homeownerId, $cleanerId, $serviceId, $bookingDateTime, $notes);
-            $success = $stmt->execute();
-            $stmt->close();
-
-            return $success;
-        } catch (Exception $e) {
-            error_log("Error creating booking: " . $e->getMessage());
-            return false;
-        }
-    }
-    
-    public function saveBooking($homeownerId, $cleanerId, $serviceId, $bookingDate) {
-        try {
-            $conn = Database::getConnection();
-            $stmt = $conn->prepare("INSERT INTO confirmed_matches (cleanerid, homeownerid, serviceid, booking_date) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("iiis", $cleanerId, $homeownerId, $serviceId, $bookingDate);
-            $success = $stmt->execute();
-            $stmt->close();
-            return $success;
-        } catch (Exception $e) {
-            error_log("Error saving booking: " . $e->getMessage());
-            return false;
-        }
-    }
 }
 ?>
