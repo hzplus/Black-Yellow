@@ -1,39 +1,24 @@
 <?php
+session_start();
 // Enable error reporting for debugging
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-session_start();
-require_once '../../Controller/platformManager/dailyReportController.php';
-
+// Check user access
 if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Manager') {
     header("Location: ../../login.php");
     exit();
 }
 
-$controller = new DailyReportController();
+// Include the new report controller
+require_once '../../Entity/platformManager/Report.php'; 
 
-// Default to today's date
+// Default to current date
 $selectedDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 
 // Generate the report
-$report = $controller->generateReport($selectedDate);
-
-// Calculate totals
-$totalNewServices = 0;
-foreach ($report['new_services'] as $service) {
-    $totalNewServices += $service['count'];
-}
-
-$totalNewUsers = 0;
-foreach ($report['new_users'] as $user) {
-    $totalNewUsers += $user['count'];
-}
-
-$activeCategories = count(array_filter($report['categories_usage'], function($cat) {
-    return $cat['service_count'] > 0;
-}));
+$report = SimpleReport::getDailyReport($selectedDate);
 ?>
 
 <!DOCTYPE html>
@@ -59,15 +44,25 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
             margin-bottom: 25px;
             flex-wrap: wrap;
             gap: 15px;
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
         }
         
         .report-title {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: bold;
             color: #FFD700;
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+        
+        .report-date {
+            font-size: 18px;
+            color: #e0e0e0;
+            margin-top: 5px;
         }
         
         .report-nav {
@@ -102,7 +97,7 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
         }
         
         .date-selector {
-            background-color: #1a1a1a;
+            background-color: #252525;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 25px;
@@ -131,7 +126,7 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
         
         .date-selector input[type="date"] {
             padding: 10px;
-            background-color: #252525;
+            background-color: #1a1a1a;
             border: 1px solid #444;
             color: #fff;
             border-radius: 4px;
@@ -165,8 +160,8 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
         
         .stat-card {
             background-color: #1a1a1a;
-            border: 1px solid #444;
-            border-radius: 8px;
+            border: 1px solid #333;
+            border-radius: 10px;
             padding: 25px 20px;
             text-align: center;
             transition: all 0.3s ease;
@@ -174,13 +169,7 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
             overflow: hidden;
         }
         
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: #FFD700;
-            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
-        }
-        
-        .stat-card::before {
+        .stat-card:before {
             content: '';
             position: absolute;
             top: 0;
@@ -188,6 +177,12 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
             right: 0;
             height: 4px;
             background: #FFD700;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: #FFD700;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
         
         .stat-icon {
@@ -210,7 +205,7 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
         
         .report-section {
             background-color: #1a1a1a;
-            border: 1px solid #444;
+            border: 1px solid #333;
             border-radius: 8px;
             margin-bottom: 25px;
             overflow: hidden;
@@ -329,10 +324,19 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
                 margin: 0;
             }
             
+            .report-header {
+                background-color: white;
+                border: none;
+            }
+            
             .report-title {
                 color: black;
                 text-align: center;
                 margin-bottom: 30px;
+            }
+            
+            .report-date {
+                color: #555;
             }
             
             .stat-card {
@@ -411,9 +415,14 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
 
 <div class="report-container">
     <div class="report-header">
-        <h1 class="report-title">
-            <i class="fas fa-calendar-day"></i> Daily Report - <?= date('F j, Y', strtotime($selectedDate)) ?>
-        </h1>
+        <div>
+            <h1 class="report-title">
+                <i class="fas fa-calendar-day"></i> Daily Activity Report
+            </h1>
+            <div class="report-date">
+                <?= date('l, F j, Y', strtotime($selectedDate)) ?>
+            </div>
+        </div>
         
         <div class="report-nav">
             <a href="dailyReport.php" class="active">
@@ -443,25 +452,33 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="stat-value"><?= $report['stats']['new_users_count'] ?></div>
+            <div class="stat-label">New Users</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
                 <i class="fas fa-concierge-bell"></i>
             </div>
-            <div class="stat-value"><?= $totalNewServices ?></div>
+            <div class="stat-value"><?= $report['stats']['new_services_count'] ?></div>
             <div class="stat-label">New Services</div>
         </div>
         
         <div class="stat-card">
             <div class="stat-icon">
-                <i class="fas fa-user-plus"></i>
+                <i class="fas fa-calendar-check"></i>
             </div>
-            <div class="stat-value"><?= $totalNewUsers ?></div>
-            <div class="stat-label">New Users</div>
+            <div class="stat-value"><?= $report['stats']['bookings_count'] ?></div>
+            <div class="stat-label">New Bookings</div>
         </div>
         
         <div class="stat-card">
             <div class="stat-icon">
                 <i class="fas fa-th-list"></i>
             </div>
-            <div class="stat-value"><?= $activeCategories ?></div>
+            <div class="stat-value"><?= $report['stats']['active_categories_count'] ?></div>
             <div class="stat-label">Active Categories</div>
         </div>
     </div>
@@ -469,7 +486,7 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
     <!-- Service Category Usage Section -->
     <div class="report-section">
         <div class="section-header">
-            <i class="fas fa-th-list"></i> Service Category Usage
+            <i class="fas fa-th-list"></i> Service Category Activity
         </div>
         <div class="table-container">
             <?php if (empty($report['categories_usage'])): ?>
@@ -479,16 +496,26 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
                     <thead>
                         <tr>
                             <th>Category</th>
-                            <th>Service Count</th>
+                            <th>New Services</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($report['categories_usage'] as $category): ?>
+                        <?php 
+                        $hasData = false;
+                        foreach ($report['categories_usage'] as $category): 
+                            if ($category['service_count'] > 0) $hasData = true;
+                        ?>
                             <tr>
                                 <td><?= htmlspecialchars($category['category_name']) ?></td>
                                 <td><?= $category['service_count'] ?></td>
                             </tr>
                         <?php endforeach; ?>
+                        
+                        <?php if (!$hasData): ?>
+                            <tr>
+                                <td colspan="2" class="empty-data">No new services were created in any category today</td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             <?php endif; ?>
@@ -525,7 +552,7 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
                         
                         <?php if (!$hasRegistrations): ?>
                             <tr>
-                                <td colspan="2" class="empty-data">No new user registrations for this date</td>
+                                <td colspan="2" class="empty-data">No new users registered today</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -534,37 +561,37 @@ $activeCategories = count(array_filter($report['categories_usage'], function($ca
         </div>
     </div>
     
-    <!-- New Services Section -->
+    <!-- New Bookings Section -->
     <div class="report-section">
         <div class="section-header">
-            <i class="fas fa-concierge-bell"></i> New Services Created
+            <i class="fas fa-calendar-check"></i> New Bookings
         </div>
         <div class="table-container">
-            <?php if (empty($report['new_services'])): ?>
-                <div class="empty-data">No new services created for this date</div>
+            <?php if (empty($report['bookings'])): ?>
+                <div class="empty-data">No new bookings for this date</div>
             <?php else: ?>
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Category</th>
-                            <th>Number of Services</th>
+                            <th>Service Category</th>
+                            <th>Number of Bookings</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php 
-                        $hasServices = false;
-                        foreach ($report['new_services'] as $service): 
-                            if ($service['count'] > 0) $hasServices = true;
+                        $hasBookings = false;
+                        foreach ($report['bookings'] as $booking):
+                            if ($booking['count'] > 0) $hasBookings = true; 
                         ?>
                             <tr>
-                                <td><?= htmlspecialchars($service['category']) ?></td>
-                                <td><?= $service['count'] ?></td>
+                                <td><?= htmlspecialchars($booking['category']) ?></td>
+                                <td><?= $booking['count'] ?></td>
                             </tr>
                         <?php endforeach; ?>
                         
-                        <?php if (!$hasServices): ?>
+                        <?php if (!$hasBookings): ?>
                             <tr>
-                                <td colspan="2" class="empty-data">No new services created for this date</td>
+                                <td colspan="2" class="empty-data">No new bookings were made today</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
