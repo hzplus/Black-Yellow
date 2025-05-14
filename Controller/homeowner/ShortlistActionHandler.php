@@ -1,6 +1,5 @@
 <?php
-// Controller/homeowner/ShortlistActionHandler.php
-require_once(__DIR__ . '/ShortlistController.php');
+require_once(__DIR__ . '/../../Entity/Homeowner.php');
 
 // This script handles AJAX or form submissions for shortlist actions
 session_start();

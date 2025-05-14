@@ -45,45 +45,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Black&Yellow</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-
-<!-- Topbar -->
-<div class="topbar">
-    <a href="login.php" style="color: #FFD700; text-decoration: none;">Login</a>
-</div>
-
-<!-- Logo -->
-<div class="logo">
-    <img src="assets/images/logo.jpg" alt="Logo">
-</div>
-
-<!-- Login Form -->
-<div class="register-box">
-    <h2>Login</h2>
-    <?php if (!empty($message)) echo "<p class='error'>$message</p>"; ?>
-
-    <form method="POST">
-        <label>User Type:</label>
-        <select name="role" required>
-            <option value="Admin">Admin</option>
-            <option value="Cleaner">Cleaner</option>
-            <option value="Homeowner">Homeowner</option>
-            <option value="Manager">Manager</option>
-        </select>
-
-        <label>Username:</label>
-        <input type="text" name="username" required>
-
-        <label>Password:</label>
-        <input type="password" name="password" required>
-
-        <button type="submit">Login</button>
-        <a href="Boundary/admin/createUserAccountUI.php"><button type="button">Register</button></a>
-    </form>
-</div>
-
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <img src="assets/images/logo.jpg" alt="Black&Yellow Logo">
+            </div>
+            <h2>Black&Yellow Cleaning Services</h2>
+            
+            <?php if (!empty($message)): ?>
+                <div class="error">
+                    <?php echo htmlspecialchars($message); ?>
+                </div>
+            <?php endif; ?>
+            
+            <form method="POST" class="login-form">
+                <div class="form-group">
+                    <label for="role">User Type</label>
+                    <select name="role" id="role" required>
+                        <option value="Admin">Admin</option>
+                        <option value="Cleaner">Cleaner</option>
+                        <option value="Homeowner">Homeowner</option>
+                        <option value="Manager">Manager</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit">Login</button>
+                    <a href="register.php"><button type="button">Register</button></a>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

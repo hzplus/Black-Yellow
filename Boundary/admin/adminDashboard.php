@@ -19,7 +19,8 @@ if (!isset($_SESSION['username'])) {
 
 <!-- Topbar with logo and welcome message -->
 <div class="topbar">
-    <img src="../../assets/images/logo.jpg" alt="Logo" class="logo">
+    <div class="logo">
+        <img src="../../assets/images/logo.jpg" alt="Black&Yellow Logo">
     <div>
         Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!
     </div>

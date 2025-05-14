@@ -1,5 +1,5 @@
 <?php
-require_once(__DIR__ . '/../../Entity/homeowner/CleaningPlatformEntity.php');
+require_once(__DIR__ . '/../../Entity/Homeowner.php');
 
 class BookServiceController {
     public static function handleBooking($homeownerId, $cleanerId, $serviceId, $bookingDate) {

@@ -1,6 +1,6 @@
 <?php
 // Controller/homeowner/ServiceDetailsController.php
-require_once(__DIR__ . '/../../Entity/homeowner/CleaningPlatformEntity.php');
+require_once(__DIR__ . '/../../Entity/Homeowner.php');
 
 class ServiceDetailsController {
     private $entity;
