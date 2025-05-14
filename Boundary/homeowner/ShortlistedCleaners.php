@@ -1,139 +1,163 @@
 <?php
-require_once(__DIR__ . '/../../Controller/homeowner/ShortlistController.php');
-session_start();
+require_once(__DIR__ . '/../../Entity/Homeowner.php');
 
-// Get the homeowner ID from the session
-$homeownerId = $_SESSION['userid'] ?? null;
-
-// Redirect if not logged in
-if (!$homeownerId) {
-    header("Location: ../login.php");
-    exit();
-}
-
-$controller = new HomeownerController();
-
-// Handle POST requests for toggling shortlist status
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cleaner_id'])) {
-    $controller->toggleShortlist($_POST['cleaner_id'], $homeownerId);
-    // Redirect to prevent form resubmission
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
-}
-
-// Get the shortlisted cleaners for this homeowner
-$cleaners = $controller->getShortlistedCleaners($homeownerId);
-
-// Handle search and filtering if implemented
-$searchTerm = $_GET['search'] ?? '';
-$filterType = $_GET['filter'] ?? 'name';
-
-if ($searchTerm) {
-    $filteredCleaners = [];
-    foreach ($cleaners as $cleaner) {
-        // Filter by name
-        if ($filterType === 'name' && stripos($cleaner->getName(), $searchTerm) !== false) {
-            $filteredCleaners[] = $cleaner;
-        } 
-        // Filter by service title
-        elseif ($filterType === 'service') {
-            $services = $cleaner->getServices();
-            foreach ($services as $service) {
-                if (stripos($service->getTitle(), $searchTerm) !== false) {
-                    $filteredCleaners[] = $cleaner;
-                    break;
-                }
-            }
+class ShortlistController {
+    private $platformEntity;
+    
+    public function __construct() {
+        $this->platformEntity = new CleaningPlatformEntity();
+    }
+    
+    public function isShortlisted($cleanerId, $homeownerId) {
+        try {
+            return $this->platformEntity->isShortlisted($cleanerId, $homeownerId);
+        } catch (Exception $e) {
+            error_log("Error checking if shortlisted: " . $e->getMessage());
+            return false;
         }
     }
-    $cleaners = $filteredCleaners;
+    
+    /**
+     * Add a cleaner to a homeowner's shortlist
+     * 
+     * @param int $cleanerId The ID of the cleaner to add
+     * @param int $homeownerId The ID of the homeowner
+     * @return bool Success status
+     */
+    public function addToShortlist($cleanerId, $homeownerId) {
+        try {
+            // Check if already shortlisted to avoid duplicates
+            if ($this->isShortlisted($cleanerId, $homeownerId)) {
+                return true; // Already shortlisted, return success
+            }
+            
+            return $this->platformEntity->addToShortlist($homeownerId, $cleanerId);
+        } catch (Exception $e) {
+            error_log("Error adding to shortlist: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Remove a cleaner from a homeowner's shortlist
+     * 
+     * @param int $cleanerId The ID of the cleaner to remove
+     * @param int $homeownerId The ID of the homeowner
+     * @return bool Success status
+     */
+    public function removeFromShortlist($cleanerId, $homeownerId) {
+        try {
+            // Check if actually shortlisted
+            if (!$this->isShortlisted($cleanerId, $homeownerId)) {
+                return true; // Not shortlisted, return success
+            }
+            
+            return $this->platformEntity->removeFromShortlist($homeownerId, $cleanerId);
+        } catch (Exception $e) {
+            error_log("Error removing from shortlist: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Toggle a cleaner's shortlist status
+     * 
+     * @param int $cleanerId The ID of the cleaner
+     * @param int $homeownerId The ID of the homeowner
+     * @return bool Success status
+     */
+    public function toggleShortlist($cleanerId, $homeownerId) {
+        try {
+            if ($this->isShortlisted($cleanerId, $homeownerId)) {
+                return $this->platformEntity->removeFromShortlist($homeownerId, $cleanerId);
+            } else {
+                return $this->platformEntity->addToShortlist($homeownerId, $cleanerId);
+            }
+        } catch (Exception $e) {
+            error_log("Error toggling shortlist: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    // Get all shortlisted cleaner IDs for a homeowner
+    public function getShortlistedCleanerIds($homeownerId) {
+        try {
+            return $this->platformEntity->getShortlistedCleanerIds($homeownerId);
+        } catch (Exception $e) {
+            error_log("Error getting shortlisted cleaner IDs: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    // Get shortlisted cleaners
+    public function getShortlistedCleaners($homeownerId) {
+        try {
+            // Get IDs of shortlisted cleaners
+            $shortlistedIds = $this->platformEntity->getShortlistedCleanerIds($homeownerId);
+            
+            // If no shortlisted cleaners, return empty array
+            if (empty($shortlistedIds)) {
+                return [];
+            }
+            
+            // Get cleaner objects for each shortlisted ID
+            $shortlistedCleaners = [];
+            foreach ($shortlistedIds as $cleanerId) {
+                $cleaner = $this->platformEntity->getCleanerById($cleanerId);
+                if ($cleaner) {
+                    $shortlistedCleaners[] = $cleaner;
+                }
+            }
+            
+            return $shortlistedCleaners;
+        } catch (Exception $e) {
+            error_log("Error getting shortlisted cleaners: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    // Search through shortlisted cleaners
+    public function searchShortlistedCleaners($homeownerId, $search = '', $category = '') {
+        try {
+            $allShortlisted = $this->getShortlistedCleaners($homeownerId);
+            
+            if (empty($search) && empty($category)) {
+                return $allShortlisted;
+            }
+            
+            $filteredCleaners = [];
+            foreach ($allShortlisted as $cleaner) {
+                $matchesSearch = empty($search) || stripos($cleaner->getName(), $search) !== false;
+                $matchesCategory = empty($category);
+                
+                if (!$matchesCategory && !empty($cleaner->getServices())) {
+                    foreach ($cleaner->getServices() as $service) {
+                        if (stripos($service->getCategory(), $category) !== false) {
+                            $matchesCategory = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if ($matchesSearch && $matchesCategory) {
+                    $filteredCleaners[] = $cleaner;
+                }
+            }
+            
+            return $filteredCleaners;
+        } catch (Exception $e) {
+            error_log("Error searching shortlisted cleaners: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    // Get all categories
+    public function getAllCategories() {
+        try {
+            return $this->platformEntity->getAllCategories();
+        } catch (Exception $e) {
+            error_log("Error getting categories: " . $e->getMessage());
+            return [];
+        }
+    }
 }
-?>
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shortlisted Cleaners</title>
-    <link rel="stylesheet" href="../../assets/css/style.css">
-</head>
-<body>
-    <?php include '../../assets/includes/header.php'; ?>
-    
-    <!-- Back Button (Similar to CleanerListings.php) -->
-    <a href="HomeownerDashboard.php" class="back-button">← Back</a>
-    
-    <h1 class="section-title">Shortlisted Cleaners</h1>
-    
-    <!-- Search and Filter Form -->
-    <form method="GET" class="filter-row">
-        <input type="text" name="search" placeholder="Search..." value="<?= htmlspecialchars($searchTerm) ?>">
-        <select name="filter">
-            <option value="name" <?= $filterType === 'name' ? 'selected' : '' ?>>By Name</option>
-            <option value="service" <?= $filterType === 'service' ? 'selected' : '' ?>>By Service</option>
-        </select>
-        <button type="submit">Search</button>
-    </form>
-    
-    <!-- Cleaner Grid Section in 2x2 Grid (similar to CleanerListings.php) -->
-    <div class="cleaner-grid">
-        <?php if (empty($cleaners)): ?>
-            <div style="text-align: center; grid-column: span 2; padding: 40px 0;">
-                <p>You haven't shortlisted any cleaners yet.</p>
-                <a href="CleanerListings.php" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #FFD700; color: black; text-decoration: none; border-radius: 5px; font-weight: bold;">Find Cleaners</a>
-            </div>
-        <?php else: ?>
-            <?php foreach ($cleaners as $cleaner): ?>
-                <?php
-                    $firstService = !empty($cleaner->getServices()) ? $cleaner->getServices()[0] : null;
-                    $price = $firstService ? "$" . number_format($firstService->getPrice(), 2) : "Price not available";
-                    $availability = $firstService ? $firstService->getAvailability() : "Availability not set";
-                ?>
-                <div class="cleaner-card">
-                    <div class="card-header">
-                        <a href="ViewCleanerProfile.php?id=<?= $cleaner->getId(); ?>" class="profile-link">View Profile</a>
-                    </div>
-                    <div class="card-body">
-                        <div class="card-left">
-                            <img src="../../assets/cleaners/ben.jpg" alt="<?= htmlspecialchars($cleaner->getName()) ?>" class="cleaner-image">
-                        </div>
-                        <div class="card-right">
-                            <div class="card-info">
-                                <p class="cleaner-name">Name: <?= htmlspecialchars($cleaner->getName()) ?></p>
-                                <p class="cleaner-price">Price: <?= htmlspecialchars($price) ?></p>
-                                <p class="cleaner-availability">Availability: <?= htmlspecialchars($availability) ?></p>
-                            </div>
-                            <div class="services-list">
-                                <h4>Services Offered:</h4>
-                                <?php if (!empty($cleaner->getServices())): ?>
-                                    <ul>
-                                        <?php 
-                                        $services = $cleaner->getServices();
-                                        $displayCount = min(count($services), 2);
-                                        for ($i = 0; $i < $displayCount; $i++): 
-                                        ?>
-                                            <li>
-                                                <span class="service-title"><?= htmlspecialchars($services[$i]->getTitle()) ?></span>
-                                            </li>
-                                        <?php endfor; ?>
-                                        <?php if (count($services) > 2): ?>
-                                            <li>+ <?= count($services) - 2 ?> more services</li>
-                                        <?php endif; ?>
-                                    </ul>
-                                <?php else: ?>
-                                    <p>No services listed</p>
-                                <?php endif; ?>
-                            </div>
-                            <form method="POST" class="shortlist-form">
-                                <input type="hidden" name="cleaner_id" value="<?= $cleaner->getId() ?>">
-                                <button type="submit" class="shortlist-btn">Remove from Shortlist</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
-</body>
-</html>

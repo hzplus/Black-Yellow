@@ -148,453 +148,457 @@ class Report {
     
     // Get category usage statistics for a date range
     private static function getCategoryUsageByDateRange($conn, $startDate, $endDate) {
-        // Get all service categories with counts
-        $query = "
-            SELECT 
-                sc.name AS category_name, 
-                COUNT(DISTINCT s.serviceid) AS service_count,
-                COUNT(DISTINCT cm.matchid) AS booking_count
-            FROM 
-                service_categories sc
-            LEFT JOIN 
-                services s ON sc.name = s.category
-            LEFT JOIN 
-                confirmed_matches cm ON s.serviceid = cm.serviceid AND cm.confirmed_at BETWEEN ? AND ?
-            GROUP BY 
-                sc.name
-            ORDER BY 
-                booking_count DESC, service_count DESC
-        ";
+        // Get service categories from category table
+        $categoriesQuery = "SELECT name FROM service_categories ORDER BY name";
+        $result = $conn->query($categoriesQuery);
         
-        try {
-            $stmt = $conn->prepare($query);
-            $stmt->bind_param("ss", $startDate, $endDate);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            $categoryData = [];
-            while ($row = $result->fetch_assoc()) {
-                $categoryData[] = $row;
-            }
-            
-            $stmt->close();
-            return $categoryData;
-        } catch (Exception $e) {
-            error_log("Error in getCategoryUsageByDateRange: " . $e->getMessage());
-            return [];
+        $categories = [];
+        while ($row = $result->fetch_assoc()) {
+            $categories[] = $row['name'];
         }
+        
+        // Now get service counts for each category within the date range
+        $categoryData = [];
+        
+        foreach ($categories as $categoryName) {
+            // Count active services in this category
+            $query = "
+                SELECT 
+                    COUNT(DISTINCT s.serviceid) AS service_count
+                FROM 
+                    services s
+                WHERE 
+                    s.category = ? AND s.created_at BETWEEN ? AND ?
+            ";
+            
+            try {
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("sss", $categoryName, $startDate, $endDate);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $row = $result->fetch_assoc();
+                
+                $categoryData[] = [
+                    'category_name' => $categoryName,
+                    'service_count' => $row['service_count'] ?? 0
+                ];
+                
+                $stmt->close();
+            } catch (Exception $e) {
+                error_log("Error in getCategoryUsageByDateRange for category $categoryName: " . $e->getMessage());
+                // Add category with 0 count if there's an error
+                $categoryData[] = [
+                    'category_name' => $categoryName,
+                    'service_count' => 0
+                ];
+            }
+        }
+        
+        // Sort by service count (descending)
+        usort($categoryData, function($a, $b) {
+            return $b['service_count'] - $a['service_count'];
+        });
+        
+        return $categoryData;
     }
     
     // Get new users registered in a date range
     private static function getNewUsersByDateRange($conn, $startDate, $endDate) {
-        // Since your users table doesn't have a created_at column, we'll provide a fallback
-        // In a production environment, you should add a created_at column to your users table
+        // Get all possible user roles
+        $roleQuery = "SELECT DISTINCT role FROM users";
+        $roleResult = $conn->query($roleQuery);
         
-        // Try to query users created in the date range if you have created_at column
-        try {
-            // Check if users table has created_at column
-            $checkColumnQuery = "SHOW COLUMNS FROM users LIKE 'created_at'";
-            $checkResult = $conn->query($checkColumnQuery);
-            
-            if ($checkResult->num_rows > 0) {
-                // If created_at column exists, use it for the query
-                $query = "
-                    SELECT 
-                        role, 
-                        COUNT(*) as count 
-                    FROM 
-                        users 
-                    WHERE 
-                        created_at BETWEEN ? AND ?
-                    GROUP BY 
-                        role
-                ";
-                
-                $stmt = $conn->prepare($query);
-                $stmt->bind_param("ss", $startDate, $endDate);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                
-                $userData = [];
-                while ($row = $result->fetch_assoc()) {
-                    $userData[] = $row;
-                }
-                
-                $stmt->close();
-                
-                if (!empty($userData)) {
-                    return $userData;
-                }
-            }
-        } catch (Exception $e) {
-            error_log("Error checking for created_at column or querying new users: " . $e->getMessage());
+        $roles = [];
+        while ($row = $roleResult->fetch_assoc()) {
+            $roles[] = $row['role'];
         }
         
-        // If the above query fails or returns no results, get aggregate counts by role
-        $query = "
-            SELECT 
-                role, 
-                COUNT(*) as count 
-            FROM 
-                users 
-            GROUP BY 
-                role
-        ";
-        
-        try {
-            $result = $conn->query($query);
-            
-            $userData = [];
-            while ($row = $result->fetch_assoc()) {
-                $userData[] = $row;
-            }
-            
-            return $userData;
-        } catch (Exception $e) {
-            error_log("Error in getNewUsersByDateRange fallback: " . $e->getMessage());
-            
-            // If all else fails, return sample data based on roles in the system
-            return [
-                ['role' => 'Homeowner', 'count' => 0],
-                ['role' => 'Cleaner', 'count' => 0],
-                ['role' => 'Admin', 'count' => 0],
-                ['role' => 'Manager', 'count' => 0]
+        // Prepare data structure with zero counts
+        $userData = [];
+        foreach ($roles as $role) {
+            $userData[$role] = [
+                'role' => $role,
+                'count' => 0
             ];
         }
+        
+        // Now try to get actual counts for the date range
+        try {
+            $query = "
+                SELECT 
+                    role, 
+                    COUNT(*) as count 
+                FROM 
+                    users 
+                WHERE 
+                    created_at BETWEEN ? AND ?
+                GROUP BY 
+                    role
+            ";
+            
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("ss", $startDate, $endDate);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            while ($row = $result->fetch_assoc()) {
+                $userData[$row['role']] = $row;
+            }
+            
+            $stmt->close();
+        } catch (Exception $e) {
+            error_log("Error in getNewUsersByDateRange: " . $e->getMessage());
+            // On error, we'll use the default zero counts
+        }
+        
+        // Convert to indexed array
+        return array_values($userData);
     }
     
     // Get new services created in a date range
     private static function getNewServicesByDateRange($conn, $startDate, $endDate) {
-        // Try to query services created in the date range
-        try {
-            // Check if services table has created_at column
-            $checkColumnQuery = "SHOW COLUMNS FROM services LIKE 'created_at'";
-            $checkResult = $conn->query($checkColumnQuery);
-            
-            if ($checkResult->num_rows > 0) {
-                // If created_at column exists, use it for the query
-                $query = "
-                    SELECT 
-                        category, 
-                        COUNT(*) as count 
-                    FROM 
-                        services 
-                    WHERE 
-                        created_at BETWEEN ? AND ?
-                    GROUP BY 
-                        category
-                ";
-                
-                $stmt = $conn->prepare($query);
-                $stmt->bind_param("ss", $startDate, $endDate);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                
-                $serviceData = [];
-                while ($row = $result->fetch_assoc()) {
-                    $serviceData[] = $row;
-                }
-                
-                $stmt->close();
-                
-                if (!empty($serviceData)) {
-                    return $serviceData;
-                }
+        // Get all possible service categories
+        $categoryQuery = "SELECT DISTINCT category FROM services UNION SELECT name FROM service_categories";
+        $categoryResult = $conn->query($categoryQuery);
+        
+        $categories = [];
+        while ($row = $categoryResult->fetch_assoc()) {
+            if (!empty($row['category'])) {
+                $categories[] = $row['category'];
             }
-        } catch (Exception $e) {
-            error_log("Error checking for created_at column or querying new services: " . $e->getMessage());
         }
         
-        // If the above query fails or returns no results, get aggregate counts by category
-        $query = "
-            SELECT 
-                category, 
-                COUNT(*) as count 
-            FROM 
-                services 
-            GROUP BY 
-                category
-        ";
-        
-        try {
-            $result = $conn->query($query);
-            
-            $serviceData = [];
-            while ($row = $result->fetch_assoc()) {
-                $serviceData[] = $row;
-            }
-            
-            return $serviceData;
-        } catch (Exception $e) {
-            error_log("Error in getNewServicesByDateRange fallback: " . $e->getMessage());
-            
-            // If all else fails, return empty categories
-            return [
-                ['category' => 'All-in-one', 'count' => 0],
-                ['category' => 'Floor', 'count' => 0],
-                ['category' => 'Laundry', 'count' => 0],
-                ['category' => 'Toilet', 'count' => 0],
-                ['category' => 'Window', 'count' => 0]
+        // Prepare data structure with zero counts
+        $serviceData = [];
+        foreach ($categories as $category) {
+            $serviceData[$category] = [
+                'category' => $category,
+                'count' => 0
             ];
         }
+        
+        // Now try to get actual counts for the date range
+        try {
+            $query = "
+                SELECT 
+                    category, 
+                    COUNT(*) as count 
+                FROM 
+                    services 
+                WHERE 
+                    created_at BETWEEN ? AND ?
+                GROUP BY 
+                    category
+            ";
+            
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("ss", $startDate, $endDate);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            while ($row = $result->fetch_assoc()) {
+                $serviceData[$row['category']] = $row;
+            }
+            
+            $stmt->close();
+        } catch (Exception $e) {
+            error_log("Error in getNewServicesByDateRange: " . $e->getMessage());
+            // On error, we'll use the default zero counts
+        }
+        
+        // Convert to indexed array
+        return array_values($serviceData);
     }
     
     // Get bookings made in a date range
     private static function getBookingsByDateRange($conn, $startDate, $endDate) {
-        $query = "
-            SELECT 
-                s.category, 
-                COUNT(cm.matchid) as count 
-            FROM 
-                services s
-            LEFT JOIN 
-                confirmed_matches cm ON s.serviceid = cm.serviceid AND cm.confirmed_at BETWEEN ? AND ?
-            GROUP BY 
-                s.category
-            ORDER BY
-                count DESC
-        ";
+        // Get all possible service categories
+        $categoryQuery = "SELECT DISTINCT category FROM services UNION SELECT name FROM service_categories";
+        $categoryResult = $conn->query($categoryQuery);
         
-        try {
-            $stmt = $conn->prepare($query);
-            $stmt->bind_param("ss", $startDate, $endDate);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            
-            $bookings = [];
-            while ($row = $result->fetch_assoc()) {
-                $bookings[] = $row;
+        $categories = [];
+        while ($row = $categoryResult->fetch_assoc()) {
+            if (!empty($row['category'])) {
+                $categories[] = $row['category'];
             }
-            
-            $stmt->close();
-            
-            if (!empty($bookings)) {
-                return $bookings;
-            }
-            
-            // If no matches in the date range, return all categories with zero count
-            $query = "
-                SELECT 
-                    name as category,
-                    0 as count
-                FROM 
-                    service_categories
-            ";
-            
-            $result = $conn->query($query);
-            
-            $bookings = [];
-            while ($row = $result->fetch_assoc()) {
-                $bookings[] = $row;
-            }
-            
-            return $bookings;
-            
-        } catch (Exception $e) {
-            error_log("Error in getBookingsByDateRange: " . $e->getMessage());
-            
-            // If all else fails, return empty data
-            return [
-                ['category' => 'All-in-one', 'count' => 0],
-                ['category' => 'Floor', 'count' => 0],
-                ['category' => 'Laundry', 'count' => 0],
-                ['category' => 'Toilet', 'count' => 0],
-                ['category' => 'Window', 'count' => 0]
+        }
+        
+        // Prepare data structure with zero counts
+        $bookingData = [];
+        foreach ($categories as $category) {
+            $bookingData[$category] = [
+                'category' => $category,
+                'count' => 0
             ];
         }
-    }
-    
-    // Get daily breakdown of booking activities for a weekly report
-    private static function getDailyBreakdown($conn, $startDate, $endDate) {
-        $query = "
-            SELECT 
-                DATE(confirmed_at) AS date,
-                COUNT(*) AS booking_count
-            FROM 
-                confirmed_matches
-            WHERE 
-                confirmed_at BETWEEN ? AND ?
-            GROUP BY 
-                DATE(confirmed_at)
-            ORDER BY 
-                date
-        ";
         
+        // Now try to get actual counts for the date range
         try {
+            $query = "
+                SELECT 
+                    s.category, 
+                    COUNT(cm.matchid) as count 
+                FROM 
+                    services s
+                JOIN 
+                    confirmed_matches cm ON s.serviceid = cm.serviceid
+                WHERE 
+                    cm.confirmed_at BETWEEN ? AND ?
+                GROUP BY 
+                    s.category
+            ";
+            
             $stmt = $conn->prepare($query);
             $stmt->bind_param("ss", $startDate, $endDate);
             $stmt->execute();
             $result = $stmt->get_result();
             
-            $dailyData = [];
             while ($row = $result->fetch_assoc()) {
-                $dailyData[] = $row;
+                $bookingData[$row['category']] = $row;
             }
             
             $stmt->close();
-            
-            // If no bookings in the date range, create entries for each day with zero count
-            if (empty($dailyData)) {
-                $dailyData = [];
-                $currentDate = new DateTime(substr($startDate, 0, 10));
-                $endDateObj = new DateTime(substr($endDate, 0, 10));
-                
-                while ($currentDate <= $endDateObj) {
-                    $dailyData[] = [
-                        'date' => $currentDate->format('Y-m-d'),
-                        'booking_count' => 0
-                    ];
-                    $currentDate->modify('+1 day');
-                }
-            }
-            
-            return $dailyData;
-            
         } catch (Exception $e) {
-            error_log("Error in getDailyBreakdown: " . $e->getMessage());
-            
-            // If error, return empty data for the date range
-            $dailyData = [];
-            $currentDate = new DateTime(substr($startDate, 0, 10));
-            $endDateObj = new DateTime(substr($endDate, 0, 10));
-            
-            while ($currentDate <= $endDateObj) {
-                $dailyData[] = [
-                    'date' => $currentDate->format('Y-m-d'),
-                    'booking_count' => 0
-                ];
-                $currentDate->modify('+1 day');
-            }
-            
-            return $dailyData;
+            error_log("Error in getBookingsByDateRange: " . $e->getMessage());
+            // On error, we'll use the default zero counts
         }
+        
+        // Convert to indexed array and sort by count
+        $bookings = array_values($bookingData);
+        usort($bookings, function($a, $b) {
+            return $b['count'] - $a['count'];
+        });
+        
+        return $bookings;
     }
     
-    // Get weekly breakdown of booking activities for a monthly report
-    private static function getWeeklyBreakdown($conn, $startDate, $endDate) {
-        $query = "
-            SELECT 
-                CONCAT('Week ', WEEK(confirmed_at, 1) - WEEK(DATE_FORMAT(confirmed_at, '%Y-%m-01'), 1) + 1) AS week_name,
-                COUNT(*) AS booking_count
-            FROM 
-                confirmed_matches
-            WHERE 
-                confirmed_at BETWEEN ? AND ?
-            GROUP BY 
-                week_name
-            ORDER BY 
-                MIN(confirmed_at)
-        ";
+    // Get daily breakdown of activities for a weekly report
+    private static function getDailyBreakdown($conn, $startDateTime, $endDateTime) {
+        // First, get dates for the entire week
+        $startDate = substr($startDateTime, 0, 10);
+        $endDate = substr($endDateTime, 0, 10);
         
+        // Create an array to hold all days in the week
+        $daysInRange = [];
+        $currentDate = new DateTime($startDate);
+        $endDateObj = new DateTime($endDate);
+        
+        while ($currentDate <= $endDateObj) {
+            $dateStr = $currentDate->format('Y-m-d');
+            $daysInRange[$dateStr] = [
+                'date' => $dateStr,
+                'new_services_count' => 0,
+                'new_users_count' => 0
+            ];
+            $currentDate->modify('+1 day');
+        }
+        
+        // Query for new services by day
         try {
+            $query = "
+                SELECT 
+                    DATE(created_at) as date,
+                    COUNT(*) as count
+                FROM 
+                    services
+                WHERE 
+                    created_at BETWEEN ? AND ?
+                GROUP BY 
+                    DATE(created_at)
+            ";
+            
             $stmt = $conn->prepare($query);
-            $stmt->bind_param("ss", $startDate, $endDate);
+            $stmt->bind_param("ss", $startDateTime, $endDateTime);
             $stmt->execute();
             $result = $stmt->get_result();
             
-            $weeklyData = [];
             while ($row = $result->fetch_assoc()) {
-                $weeklyData[] = $row;
-            }
-            
-            $stmt->close();
-            
-            // If no bookings in the date range, create entries for each week with zero count
-            if (empty($weeklyData)) {
-                $numWeeks = ceil(date('t', strtotime($startDate)) / 7); // Number of weeks in the month
-                
-                for ($i = 1; $i <= $numWeeks; $i++) {
-                    $weeklyData[] = [
-                        'week_name' => "Week $i",
-                        'booking_count' => 0
-                    ];
+                if (isset($daysInRange[$row['date']])) {
+                    $daysInRange[$row['date']]['new_services_count'] = $row['count'];
                 }
             }
             
-            return $weeklyData;
-            
+            $stmt->close();
         } catch (Exception $e) {
-            error_log("Error in getWeeklyBreakdown: " . $e->getMessage());
+            error_log("Error getting daily services breakdown: " . $e->getMessage());
+        }
+        
+        // Query for new users by day
+        try {
+            $query = "
+                SELECT 
+                    DATE(created_at) as date,
+                    COUNT(*) as count
+                FROM 
+                    users
+                WHERE 
+                    created_at BETWEEN ? AND ?
+                GROUP BY 
+                    DATE(created_at)
+            ";
             
-            // If error, return empty data
-            $numWeeks = ceil(date('t', strtotime($startDate)) / 7); // Number of weeks in the month
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("ss", $startDateTime, $endDateTime);
+            $stmt->execute();
+            $result = $stmt->get_result();
             
-            $weeklyData = [];
-            for ($i = 1; $i <= $numWeeks; $i++) {
-                $weeklyData[] = [
-                    'week_name' => "Week $i",
-                    'booking_count' => 0
-                ];
+            while ($row = $result->fetch_assoc()) {
+                if (isset($daysInRange[$row['date']])) {
+                    $daysInRange[$row['date']]['new_users_count'] = $row['count'];
+                }
             }
             
-            return $weeklyData;
+            $stmt->close();
+        } catch (Exception $e) {
+            error_log("Error getting daily users breakdown: " . $e->getMessage());
         }
+        
+        // Convert associative array to indexed array
+        return array_values($daysInRange);
+    }
+    
+    // Get weekly breakdown of activities for a monthly report
+    private static function getWeeklyBreakdown($conn, $startDateTime, $endDateTime) {
+        // Create an array for weeks in the month (typically 4-5 weeks)
+        $weeks = [];
+        
+        for ($i = 1; $i <= 5; $i++) {
+            $weeks["Week $i"] = [
+                'week_name' => "Week $i",
+                'new_services_count' => 0,
+                'new_users_count' => 0
+            ];
+        }
+        
+        // Query for new services by week
+        try {
+            $query = "
+                SELECT 
+                    CONCAT('Week ', WEEK(created_at, 1) - WEEK(DATE_FORMAT(created_at, '%Y-%m-01'), 1) + 1) AS week_name,
+                    COUNT(*) AS count
+                FROM 
+                    services
+                WHERE 
+                    created_at BETWEEN ? AND ?
+                GROUP BY 
+                    week_name
+            ";
+            
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("ss", $startDateTime, $endDateTime);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            while ($row = $result->fetch_assoc()) {
+                if (isset($weeks[$row['week_name']])) {
+                    $weeks[$row['week_name']]['new_services_count'] = $row['count'];
+                }
+            }
+            
+            $stmt->close();
+        } catch (Exception $e) {
+            error_log("Error getting weekly services breakdown: " . $e->getMessage());
+        }
+        
+        // Query for new users by week
+        try {
+            $query = "
+                SELECT 
+                    CONCAT('Week ', WEEK(created_at, 1) - WEEK(DATE_FORMAT(created_at, '%Y-%m-01'), 1) + 1) AS week_name,
+                    COUNT(*) AS count
+                FROM 
+                    users
+                WHERE 
+                    created_at BETWEEN ? AND ?
+                GROUP BY 
+                    week_name
+            ";
+            
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("ss", $startDateTime, $endDateTime);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            while ($row = $result->fetch_assoc()) {
+                if (isset($weeks[$row['week_name']])) {
+                    $weeks[$row['week_name']]['new_users_count'] = $row['count'];
+                }
+            }
+            
+            $stmt->close();
+        } catch (Exception $e) {
+            error_log("Error getting weekly users breakdown: " . $e->getMessage());
+        }
+        
+        // Remove weeks that are beyond the actual number of weeks in the month
+        $finalWeeks = [];
+        $actualWeeks = ceil(date('t', strtotime(substr($startDateTime, 0, 10))) / 7);
+        
+        for ($i = 1; $i <= min(5, $actualWeeks); $i++) {
+            $finalWeeks[] = $weeks["Week $i"];
+        }
+        
+        return $finalWeeks;
     }
     
     // Get top performing categories
     private static function getTopCategories($conn, $startDate, $endDate) {
-        $query = "
-            SELECT 
-                s.category, 
-                COUNT(cm.matchid) as booking_count
-            FROM 
-                services s
-            LEFT JOIN 
-                confirmed_matches cm ON s.serviceid = cm.serviceid AND cm.confirmed_at BETWEEN ? AND ?
-            GROUP BY 
-                s.category
-            ORDER BY 
-                booking_count DESC
-            LIMIT 3
-        ";
+        // Get all possible service categories
+        $categoryQuery = "SELECT DISTINCT category FROM services UNION SELECT name FROM service_categories";
+        $categoryResult = $conn->query($categoryQuery);
         
+        $categories = [];
+        while ($row = $categoryResult->fetch_assoc()) {
+            if (!empty($row['category'])) {
+                $categories[] = $row['category'];
+            }
+        }
+        
+        // Prepare data structure with zero counts
+        $topCategoryData = [];
+        foreach ($categories as $category) {
+            $topCategoryData[$category] = [
+                'category' => $category,
+                'service_count' => 0
+            ];
+        }
+        
+        // Get bookings counts for the date range
         try {
+            $query = "
+                SELECT 
+                    s.category, 
+                    COUNT(cm.matchid) as service_count
+                FROM 
+                    services s
+                JOIN 
+                    confirmed_matches cm ON s.serviceid = cm.serviceid
+                WHERE 
+                    cm.confirmed_at BETWEEN ? AND ?
+                GROUP BY 
+                    s.category
+            ";
+            
             $stmt = $conn->prepare($query);
             $stmt->bind_param("ss", $startDate, $endDate);
             $stmt->execute();
             $result = $stmt->get_result();
             
-            $topCategories = [];
             while ($row = $result->fetch_assoc()) {
-                $topCategories[] = $row;
+                $topCategoryData[$row['category']] = $row;
             }
             
             $stmt->close();
-            
-            // If no matches, get the top 3 categories by service count
-            if (empty($topCategories) || $topCategories[0]['booking_count'] == 0) {
-                $query = "
-                    SELECT 
-                        category, 
-                        0 as booking_count
-                    FROM 
-                        services
-                    GROUP BY 
-                        category
-                    ORDER BY 
-                        COUNT(*) DESC
-                    LIMIT 3
-                ";
-                
-                $result = $conn->query($query);
-                
-                $topCategories = [];
-                while ($row = $result->fetch_assoc()) {
-                    $topCategories[] = $row;
-                }
-            }
-            
-            return $topCategories;
-            
         } catch (Exception $e) {
             error_log("Error in getTopCategories: " . $e->getMessage());
-            
-            // If error, return generic categories
-            return [
-                ['category' => 'Floor', 'booking_count' => 0],
-                ['category' => 'All-in-one', 'booking_count' => 0],
-                ['category' => 'Toilet', 'booking_count' => 0]
-            ];
         }
+        
+        // Convert to indexed array, sort by service count, and get top 3
+        $topCategories = array_values($topCategoryData);
+        usort($topCategories, function($a, $b) {
+            return $b['service_count'] - $a['service_count'];
+        });
+        
+        return array_slice($topCategories, 0, 3);
     }
 }

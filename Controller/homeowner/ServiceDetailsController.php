@@ -1,7 +1,5 @@
 <?php
 // Controller/homeowner/ServiceDetailsController.php
-require_once(__DIR__ . '/../../Entity/homeowner/CleaningPlatformEntity.php');
-
 class ServiceDetailsController {
     private $entity;
     
@@ -10,20 +8,12 @@ class ServiceDetailsController {
     }
     
     public function getServiceById($serviceId) {
-        // echo "Debug (ServiceDetailsController): Getting service with ID: " . $serviceId . "<br>";
         $service = $this->entity->getServiceDetailById($serviceId);
-        // echo "Debug (ServiceDetailsController): Service result: ";
-        // var_dump($service);
-        // echo "<br>";
         return $service;
     }
     
     public function getCleanerById($cleanerId) {
-        // echo "Debug (ServiceDetailsController): Getting cleaner with ID: " . $cleanerId . "<br>";
         $cleaner = $this->entity->getCleanerById($cleanerId);
-        // echo "Debug (ServiceDetailsController): Cleaner result: ";
-        // var_dump($cleaner);
-        // echo "<br>";
         return $cleaner;
     }
     
@@ -42,8 +32,4 @@ class ServiceDetailsController {
             return $this->entity->addToShortlist($homeownerId, $cleanerId);
         }
     }
-    
-    // public function bookService($homeownerId, $cleanerId, $serviceId, $bookingDateTime, $notes) {
-    //     return $this->entity->createBooking($homeownerId, $cleanerId, $serviceId, $bookingDateTime, $notes);
-    // }
 }

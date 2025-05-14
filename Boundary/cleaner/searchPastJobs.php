@@ -33,18 +33,8 @@ $jobs = SearchPastJobsController::search($cleanerId, $keyword);
 </head>
 <body>
 
-<div class="topbar">
-    <img src="../../assets/images/logo.jpg" alt="Logo">
-    <div>Welcome, <?= htmlspecialchars($_SESSION['username']); ?>!</div>
-</div>
-
-<div class="navbar">
-    <a href="cleanerDashboard.php">Home</a>
-    <a href="serviceListings.php">Service Listings</a>
-    <a href="searchPastJobs.php">Search Past Jobs</a>
-    <a href="pastJobs.php">Past Jobs</a>
-    <a href="../../logout.php">Logout</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/cleaner-header.php'; ?>
 
 
 <div class="dashboard">

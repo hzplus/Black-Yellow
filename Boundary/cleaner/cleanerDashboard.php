@@ -15,19 +15,8 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'Cleaner') {
 </head>
 <body>
 
-<!-- Topbar -->
-<div class="topbar">
-    <img src="../../assets/images/logo.jpg" alt="Logo" class="logo-img">
-    <div>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</div>
-</div>
-
-<!-- Navbar -->
-<div class="navbar">
-    <a href="#">Home</a>
-    <a href="serviceListings.php">Service Listings</a>
-    <a href="pastJobs.php">Jobs History</a>
-    <a href="../../logout.php">Logout</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/cleaner-header.php'; ?>
 
 <!-- Dashboard content -->
 <div class="dashboard">

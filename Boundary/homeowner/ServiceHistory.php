@@ -35,6 +35,8 @@ if ($from && $to) {
     </style>
 </head>
 <body>
+    <!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/homeowner-header.php'; ?>
     <h1>Service History</h1>
 
     <form method="GET">

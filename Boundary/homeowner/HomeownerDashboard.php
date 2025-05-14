@@ -1,11 +1,6 @@
 <?php
-// Boundary/homeowner/HomeownerDashboard.php
-
 // Start the session
 session_start();
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
 
 // Redirect if no user is logged in
 if (!isset($_SESSION['userid'])) {
@@ -20,70 +15,30 @@ if ($userRole != 'Homeowner') {
     exit();
 }
 
-// Include the Database connection
-require_once(__DIR__ . '/../../db/Database.php');
+// Use session data instead of database queries
+$homeownerName = $_SESSION['username'] ?? "Homeowner";
 
-// Get database connection
-$conn = Database::getConnection();
-
-// Get homeowner information
-$homeownerId = $_SESSION['userid'];
-$homeownerName = "";
-
-$stmt = $conn->prepare("SELECT username FROM users WHERE userid = ? AND role = 'Homeowner'");
-$stmt->bind_param("i", $homeownerId);
-$stmt->execute();
-$result = $stmt->get_result();
-if ($result && $result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $homeownerName = $row['username'];
-}
-$stmt->close();
-
-// Get recent service history
-$recentServices = [];
-$stmt = $conn->prepare("
-    SELECT cm.matchid, cm.serviceid, cm.cleanerid, cm.confirmed_at,
-           s.title as service_title,
-           u.username as cleaner_name
-    FROM confirmed_matches cm
-    JOIN services s ON cm.serviceid = s.serviceid
-    JOIN users u ON cm.cleanerid = u.userid
-    WHERE cm.homeownerid = ?
-    ORDER BY cm.confirmed_at DESC
-    LIMIT 3
-");
-$stmt->bind_param("i", $homeownerId);
-$stmt->execute();
-$result = $stmt->get_result();
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $service = [
-            'serviceId' => $row['serviceid'],
-            'serviceTitle' => $row['service_title'],
-            'cleanerName' => $row['cleaner_name'],
-            'confirmedAt' => $row['confirmed_at']
-        ];
-        $recentServices[] = $service;
-    }
-}
-$stmt->close();
-
-// Get shortlisted cleaners count
-$shortlistedCount = 0;
-$stmt = $conn->prepare("
-    SELECT COUNT(*) as count
-    FROM shortlists
-    WHERE homeownerid = ?
-");
-$stmt->bind_param("i", $homeownerId);
-$stmt->execute();
-$result = $stmt->get_result();
-if ($result && $result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $shortlistedCount = $row['count'];
-}
-$stmt->close();
+// Sample mock data instead of using controllers
+$recentServices = [
+    [
+        'serviceId' => 1,
+        'serviceTitle' => 'Regular House Cleaning',
+        'cleanerName' => 'John Cleaner',
+        'confirmedAt' => '2025-04-10 09:00:00'
+    ],
+    [
+        'serviceId' => 2,
+        'serviceTitle' => 'Deep Cleaning Service',
+        'cleanerName' => 'Mary Clean',
+        'confirmedAt' => '2025-03-22 14:30:00'
+    ],
+    [
+        'serviceId' => 3,
+        'serviceTitle' => 'Window Cleaning',
+        'cleanerName' => 'Bob Shine',
+        'confirmedAt' => '2025-03-15 10:15:00'
+    ]
+];
 
 // Helper function to format date
 function formatDate($dateString) {
@@ -97,42 +52,76 @@ function formatDate($dateString) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homeowner Dashboard - Cleaning Service</title>
+    <title>Homeowner Dashboard - Black&Yellow Cleaning</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
 </head>
 <body>
-    <!-- Include the header (topbar and navbar) -->
-    <?php include '../../assets/includes/header.php'; ?>
+    <!-- Topbar -->
+    <div class="topbar">
+        <div class="logo">
+            <img src="../../assets/images/logo.jpg" alt="Black&Yellow Logo">
+            <h1>Black&Yellow</h1>
+        </div>
+        <div class="user-info">
+            <span>Welcome, <?php echo htmlspecialchars($homeownerName); ?>!</span>
+            <a href="../../login.php" class="logout-link">Logout</a>
+        </div>
+    </div>
     
-    <div class="dashboard-container">
-        <div class="dashboard-box">
-            <h1 class="dashboard-title">Welcome, <?php echo htmlspecialchars($homeownerName); ?></h1>            
-            <div class="dashboard-options">
-                <a href="ViewCleanerListings.php" class="option-link">
-                    <div class="option">
-                        <h2>Find a Cleaner</h2>
-                        <p>Search for cleaners available in your area.</p>
+    <!-- Navigation -->
+    <div class="navbar">
+        <a href="homeownerDashboard.php" class="active">Dashboard</a>
+        <a href="ViewCleanerListings.php">Find Cleaners</a>
+        <a href="ViewShortlistedCleaners.php">Shortlisted</a>
+        <a href="ViewServiceHistory.php">History</a>
+        <a href="ViewMyAccount.php">My Account</a>
+    </div>
+    
+    <div class="dashboard-content container">
+        <h1 class="dashboard-title">Welcome, <?php echo htmlspecialchars($homeownerName); ?></h1>
+        <p class="dashboard-subtitle">Manage your cleaning services</p>
+        
+        <div class="dashboard-options">
+            <a href="ViewCleanerListings.php" class="option-link">
+                <div class="option-card">
+                    <div class="icon">
+                        <i class="fas fa-search"></i>
                     </div>
-                </a>
-                <a href="ViewShortlistedCleaners.php" class="option-link">
-                    <div class="option">
-                        <h2>Shortlisted Cleaners</h2>
-                        <p>View your saved and shortlisted cleaners.</p>
+                    <h3>Find a Cleaner</h3>
+                    <p>Search for cleaners available in your area.</p>
+                </div>
+            </a>
+            
+            <a href="ViewShortlistedCleaners.php" class="option-link">
+                <div class="option-card">
+                    <div class="icon">
+                        <i class="fas fa-bookmark"></i>
                     </div>
-                </a>
-                <a href="ViewServiceHistory.php" class="option-link">
-                    <div class="option">
-                        <h2>Service History</h2>
-                        <p>Review past service bookings and feedback.</p>
+                    <h3>Shortlisted Cleaners</h3>
+                    <p>View your saved and shortlisted cleaners.</p>
+                </div>
+            </a>
+            
+            <a href="ViewServiceHistory.php" class="option-link">
+                <div class="option-card">
+                    <div class="icon">
+                        <i class="fas fa-history"></i>
                     </div>
-                </a>
-                <a href="ViewMyAccount.php" class="option-link">
-                    <div class="option">
-                        <h2>My Account</h2>
-                        <p>View and update your account information.</p>
+                    <h3>Service History</h3>
+                    <p>Review past service bookings and feedback.</p>
+                </div>
+            </a>
+            
+            <a href="ViewMyAccount.php" class="option-link">
+                <div class="option-card">
+                    <div class="icon">
+                        <i class="fas fa-user-cog"></i>
                     </div>
-                </a>
-            </div>
+                    <h3>My Account</h3>
+                    <p>View and update your account information.</p>
+                </div>
+            </a>
         </div>
     </div>
 </body>

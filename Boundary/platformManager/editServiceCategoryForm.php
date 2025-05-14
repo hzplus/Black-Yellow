@@ -72,22 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
 
-<div style="text-align: right; padding-right: 20px;">
-    Welcome, manager! 
-    <a href="../../logout.php" style="color: purple; text-decoration: none;">Logout</a>
-</div>
-
-<div style="padding: 10px;">
-    <a href="managerDashboard.php">
-        <img src="../../assets/images/logo.jpg" alt="Logo" style="max-width: 100px;">
-    </a>
-</div>
-
-<div style="background-color: #FFD700; padding: 10px; text-align: center;">
-    <a href="managerDashboard.php" style="color: black; text-decoration: none; margin: 0 20px;">Home</a>
-    <a href="categoriesMenu.php" style="color: black; text-decoration: none; margin: 0 20px;">Service Categories</a>
-    <a href="reportsMenu.php" style="color: black; text-decoration: none; margin: 0 20px;">Reports</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/manager-header.php'; ?>
 
 <div style="padding: 20px;">
     <h1>Edit Category: <?= htmlspecialchars($category['name']) ?></h1>

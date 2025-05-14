@@ -17,130 +17,167 @@ $categories = $controller->getAllCategories();
     <meta charset="UTF-8">
     <title>Edit Service Categories</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: black;
-            color: white;
+        .content-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
-        .header {
+        
+        .content-header {
             display: flex;
-            justify-content: flex-end;
-            padding: 10px 20px;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
         }
-        .welcome-text {
-            color: white;
-        }
-        .logout-link {
-            color: purple;
-            text-decoration: none;
-            margin-left: 10px;
-        }
-        .logo-container {
-            padding: 10px;
-        }
-        .logo {
-            max-width: 100px;
-        }
-        .nav-bar {
-            background-color: #FFD700;
-            padding: 10px;
-            text-align: center;
-        }
-        .nav-link {
-            color: black;
-            text-decoration: none;
-            margin: 0 20px;
+        
+        .content-title {
+            color: #FFD700;
+            font-size: 28px;
             font-weight: bold;
         }
-        .content {
-            padding: 20px;
+        
+        .search-container {
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #252525;
+            border-radius: 8px;
+            border: 1px solid #444;
         }
-        h1 {
-            color: white;
-            margin-bottom: 20px;
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 15px;
+            background-color: #1a1a1a;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s ease;
         }
-        table {
+        
+        .search-input:focus {
+            border-color: #FFD700;
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+            outline: none;
+        }
+        
+        .categories-table {
             width: 100%;
             border-collapse: collapse;
-            border: 1px solid white;
+            background-color: #1a1a1a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
-        th, td {
-            border: 1px solid white;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #000;
+        
+        .categories-table th {
+            background-color: #252525;
+            color: #FFD700;
             font-weight: bold;
+            text-align: left;
+            padding: 15px;
+            border-bottom: 2px solid #444;
         }
+        
+        .categories-table td {
+            padding: 15px;
+            border-bottom: 1px solid #333;
+            color: #e0e0e0;
+        }
+        
+        .categories-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .categories-table tr:hover td {
+            background-color: #252525;
+        }
+        
         .action-link {
-            color: blue;
-            text-decoration: none;
-        }
-        .back-link {
-            color: purple;
-            text-decoration: none;
-            margin-top: 20px;
             display: inline-block;
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: #fff;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
         }
-        #searchBox {
-            margin-bottom: 10px;
-            padding: 5px;
-            width: 250px;
+        
+        .action-link:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
         }
-        #noResultsMessage {
-            color: red;
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 25px;
+            color: #FFD700;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        
+        .back-link:hover {
+            color: #e6c200;
+        }
+        
+        .back-link i {
+            margin-right: 5px;
+        }
+        
+        .no-results {
+            padding: 20px;
+            text-align: center;
+            color: #e57373;
+            background-color: rgba(211, 47, 47, 0.1);
+            border: 1px solid #d32f2f;
+            border-radius: 5px;
+            margin-top: 15px;
             display: none;
         }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <span class="welcome-text">Welcome, manager!</span>
-    <a href="../../logout.php" class="logout-link">Logout</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/manager-header.php'; ?>
 
-<div class="logo-container">
-    <a href="managerDashboard.php">
-        <img src="../../assets/images/logo.jpg" alt="Logo" class="logo">
-    </a>
-</div>
-
-<div class="nav-bar">
-    <a href="managerDashboard.php" class="nav-link">Home</a>
-    <a href="categoriesMenu.php" class="nav-link">Service Categories</a>
-    <a href="reportsMenu.php" class="nav-link">Reports</a>
-</div>
-
-<div class="content">
-    <h1>Edit Service Categories</h1>
+<div class="content-container">
+    <div class="content-header">
+        <h1 class="content-title">Edit Service Categories</h1>
+    </div>
     
-    <input type="text" id="searchBox" placeholder="Search by name..." onkeyup="filterCategories()">
+    <div class="search-container">
+        <input type="text" id="searchBox" class="search-input" placeholder="Search by name..." onkeyup="filterCategories()">
+    </div>
 
-    <table id="categoryTable">
-        <tr>
-            <th>Category ID</th>
-            <th>Name</th>
-            <th>Created At</th>
-            <th>Action</th>
-        </tr>
-        <?php foreach ($categories as $category): ?>
+    <table id="categoryTable" class="categories-table">
+        <thead>
             <tr>
-                <td><?= htmlspecialchars($category['categoryid']) ?></td>
-                <td><?= htmlspecialchars($category['name']) ?></td>
-                <td><?= isset($category['created_at']) ? htmlspecialchars($category['created_at']) : date('Y-m-d H:i:s') ?></td>
-                <td><a href="editServiceCategoryForm.php?category_id=<?= $category['categoryid'] ?>" class="action-link">Edit</a></td>
+                <th>Category ID</th>
+                <th>Name</th>
+                <th>Created At</th>
+                <th>Action</th>
             </tr>
-        <?php endforeach; ?>
+        </thead>
+        <tbody>
+            <?php foreach ($categories as $category): ?>
+                <tr>
+                    <td><?= htmlspecialchars($category['categoryid']) ?></td>
+                    <td><?= htmlspecialchars($category['name']) ?></td>
+                    <td><?= isset($category['created_at']) ? htmlspecialchars($category['created_at']) : date('Y-m-d H:i:s') ?></td>
+                    <td><a href="editServiceCategoryForm.php?category_id=<?= $category['categoryid'] ?>" class="action-link">Edit</a></td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
     </table>
 
-    <p id="noResultsMessage">No matching categories found.</p>
+    <p id="noResultsMessage" class="no-results">No matching categories found.</p>
     
-    <p><a href="categoriesMenu.php" class="back-link">← Back to Categories Menu</a></p>
+    <a href="categoriesMenu.php" class="back-link"><i class="fas fa-arrow-left"></i> Back to Categories Menu</a>
 </div>
 
 <!-- Live Search Script -->
@@ -149,7 +186,7 @@ function filterCategories() {
     const input = document.getElementById("searchBox").value.toUpperCase();
     const table = document.getElementById("categoryTable");
     const rows = table.getElementsByTagName("tr");
-
+    
     let visible = 0;
 
     // Start at index 1 to skip the header row

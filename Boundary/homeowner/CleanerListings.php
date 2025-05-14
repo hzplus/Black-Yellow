@@ -75,8 +75,8 @@ try {
   <link rel="stylesheet" href="/Black-Yellow/assets/css/style.css">
 </head>
 <body>
-  <!-- Include the header (topbar and navbar) -->
-  <?php include '../../assets/includes/header.php'; ?>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/homeowner-header.php'; ?>
 
   <!-- Search and Filter Form -->
   <form method="GET" class="filter-row">
