@@ -28,22 +28,34 @@ class User
     /**
      * Create a new user.
      */
-    public static function create(
-        string $username,
-        string $email,
-        string $password,
-        string $role
-    ): bool {
+    public static function create(string $username, string $email, string $password, string $role): bool {
         $conn = Database::getConnection();
-
-        $hash = password_hash($password, PASSWORD_BCRYPT);
-        $sql  = "INSERT INTO users (username, email, password, role, status)
-                 VALUES (?, ?, ?, ?, 'active')";
-        $stmt = $conn->prepare($sql);
+    
+        // Step 1: Check if user already exists
+        $checkSql = "SELECT userid FROM users WHERE username = ? OR email = ?";
+        $stmt = $conn->prepare($checkSql);
         if (!$stmt) {
+            error_log("Prepare failed: " . $conn->error);
             return false;
         }
-
+        $stmt->bind_param("ss", $username, $email);
+        $stmt->execute();
+        $stmt->store_result();
+    
+        if ($stmt->num_rows > 0) {
+            $stmt->close();
+            return false; // User exists
+        }
+        $stmt->close();
+    
+        // Step 2: Insert new user
+        $hash = password_hash($password, PASSWORD_BCRYPT);
+        $insertSql = "INSERT INTO users (username, email, password, role, status) VALUES (?, ?, ?, ?, 'active')";
+        $stmt = $conn->prepare($insertSql);
+        if (!$stmt) {
+            error_log("Prepare failed: " . $conn->error);
+            return false;
+        }
         $stmt->bind_param("ssss", $username, $email, $hash, $role);
         $ok = $stmt->execute();
         $stmt->close();

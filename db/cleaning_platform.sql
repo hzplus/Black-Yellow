@@ -186,9 +186,33 @@ INSERT INTO `users` (`userid`, `username`, `email`, `password`, `role`, `status`
 (14, 'sophia_tan', 'sophia.tan@example.com', '$2y$10$QXqKyowmlN6i3Yc5uBybfe3kK2Rb8NCIKsbGm5Hb2yZTjvVczmvX6', 'Cleaner', 'active', '2025-05-12 19:10:24'),
 (15, 'manager', 'manager@example.com', '$2y$10$JTH95rzGf0luM4Vole867OHcoLtvjjO5hnySBvrlweI3s8Y6E8Az6', 'Manager', 'active', '2025-05-12 19:10:24');
 
---
--- Indexes for dumped tables
---
+-- --------------------------------------------------------
+
+-- Table structure for table `user_profiles`
+
+CREATE TABLE `user_profiles` (
+  `profile_id` int(11) NOT NULL,
+  `role` varchar(50) NOT NULL,
+  `description` text NOT NULL,
+  `status` varchar(20) DEFAULT 'active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table `user_profiles`
+
+INSERT INTO `user_profiles` (`profile_id`, `role`, `description`, `status`) VALUES
+(1, 'Admin', 'System administrator with full privileges', 'active'),
+(2, 'Cleaner', 'Provides cleaning services', 'active'),
+(3, 'Homeowner', 'Books cleaning services', 'active'),
+(4, 'Manager', 'Manages platform-level configurations and reports', 'active');
+
+-- Indexes for table `user_profiles`
+ALTER TABLE `user_profiles`
+  ADD PRIMARY KEY (`profile_id`);
+
+-- AUTO_INCREMENT for table `user_profiles`
+ALTER TABLE `user_profiles`
+  MODIFY `profile_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  -- --------------------------------------------------------
 
 --
 -- Indexes for table `confirmed_matches`

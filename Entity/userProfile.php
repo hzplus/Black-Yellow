@@ -25,7 +25,6 @@ class userProfile
         $sql  = "INSERT INTO user_profiles (role, description) VALUES (?, ?)";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            $conn->close();
             return false;
         }
 
@@ -33,7 +32,6 @@ class userProfile
         $ok = $stmt->execute();
 
         $stmt->close();
-        $conn->close();
         return $ok;
     }
 
@@ -44,7 +42,6 @@ class userProfile
         $sql  = "SELECT role FROM user_profiles WHERE role = ?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            $conn->close();
             return false;
         }
 
@@ -55,14 +52,12 @@ class userProfile
         $exists = $stmt->num_rows > 0;
 
         $stmt->close();
-        $conn->close();
         return $exists;
     }
 
     /** Fetch all profiles */
     public static function getAll(): array
     {
-       
         $conn = Database::getConnection();
         $profiles = [];
 
@@ -82,7 +77,6 @@ class userProfile
             $stmt->close();
         }
 
-        $conn->close();
         return $profiles;
     }
 
@@ -93,7 +87,6 @@ class userProfile
         $sql  = "SELECT profile_id, role, description, status FROM user_profiles WHERE profile_id = ?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            $conn->close();
             return null;
         }
 
@@ -109,12 +102,10 @@ class userProfile
                 $row['status']
             );
             $stmt->close();
-            $conn->close();
             return $profile;
         }
 
         $stmt->close();
-        $conn->close();
         return null;
     }
 
@@ -125,7 +116,6 @@ class userProfile
         $sql  = "UPDATE user_profiles SET role = ?, description = ?, status = ? WHERE profile_id = ?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            $conn->close();
             return false;
         }
 
@@ -133,7 +123,6 @@ class userProfile
         $ok = $stmt->execute();
 
         $stmt->close();
-        $conn->close();
         return $ok;
     }
 
@@ -144,7 +133,6 @@ class userProfile
         $sql  = "DELETE FROM user_profiles WHERE profile_id = ?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            $conn->close();
             return false;
         }
 
@@ -152,28 +140,28 @@ class userProfile
         $ok = $stmt->execute();
 
         $stmt->close();
-        $conn->close();
         return $ok;
     }
 
-    public static function searchByRole(string $keyword): array {
+    /** Search profiles by role */
+    public static function searchByRole(string $keyword): array
+    {
         $conn = Database::getConnection();
         $profiles = [];
-    
+
         $sql = "SELECT profile_id, role, description, status 
                 FROM user_profiles 
                 WHERE role LIKE ?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            $conn->close();
             return [];
         }
-    
+
         $likeKeyword = "%$keyword%";
         $stmt->bind_param("s", $likeKeyword);
         $stmt->execute();
         $res = $stmt->get_result();
-    
+
         while ($row = $res->fetch_assoc()) {
             $profiles[] = new userProfile(
                 (int)$row['profile_id'],
@@ -182,24 +170,23 @@ class userProfile
                 $row['status']
             );
         }
-    
+
         $stmt->close();
-        $conn->close();
         return $profiles;
     }
 
-    public static function suspend(int $id): bool {
+    /** Suspend a profile */
+    public static function suspend(int $id): bool
+    {
         $conn = Database::getConnection();
         $sql = "UPDATE user_profiles SET status = 'suspended' WHERE profile_id = ?";
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
-            $conn->close();
             return false;
         }
         $stmt->bind_param("i", $id);
         $ok = $stmt->execute();
         $stmt->close();
-        $conn->close();
         return $ok;
     }
 }
