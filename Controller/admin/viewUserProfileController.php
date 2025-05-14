@@ -9,7 +9,7 @@ class viewUserProfileController {
     }
 
     /** Get a single profile by ID */
-    public function getProfileById(int $id): ?userProfile {
+    public function getProfileById(int $id): userProfile {
         return userProfile::getById($id);
     }
 }

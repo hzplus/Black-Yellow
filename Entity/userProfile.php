@@ -20,40 +20,45 @@ class userProfile
 
     /** Create a new profile */
     public static function create(string $role, string $description): bool
-    {
-        $conn = Database::getConnection();
-        $sql  = "INSERT INTO user_profiles (role, description) VALUES (?, ?)";
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
-            return false;
-        }
-
-        $stmt->bind_param("ss", $role, $description);
-        $ok = $stmt->execute();
-
-        $stmt->close();
-        return $ok;
+{
+    if (self::exists($role)) {
+        return false;
     }
+
+    $conn = Database::getConnection();
+    $sql  = "INSERT INTO user_profiles (role, description) VALUES (?, ?)";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        return false;
+    }
+
+    $stmt->bind_param("ss", $role, $description);
+    $ok = $stmt->execute();
+
+    $stmt->close();
+    return $ok;
+}
+
 
     /** Check if a role already exists */
     public static function exists(string $role): bool
-    {
-        $conn = Database::getConnection();
-        $sql  = "SELECT role FROM user_profiles WHERE role = ?";
-        $stmt = $conn->prepare($sql);
-        if (!$stmt) {
-            return false;
-        }
-
-        $stmt->bind_param("s", $role);
-        $stmt->execute();
-        $stmt->store_result();
-
-        $exists = $stmt->num_rows > 0;
-
-        $stmt->close();
-        return $exists;
+{
+    $conn = Database::getConnection();
+    $sql  = "SELECT profile_id FROM user_profiles WHERE role = ?";
+    $stmt = $conn->prepare($sql);
+    if (!$stmt) {
+        return false;
     }
+
+    $stmt->bind_param("s", $role);
+    $stmt->execute();
+    $stmt->store_result();
+
+    $exists = $stmt->num_rows > 0;
+
+    $stmt->close();
+    return $exists;
+}
 
     /** Fetch all profiles */
     public static function getAll(): array
