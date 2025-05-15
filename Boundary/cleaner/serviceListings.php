@@ -6,7 +6,7 @@ if (!isset($_SESSION['username']) || $_SESSION['role'] !== 'Cleaner') {
 }
 require_once(__DIR__ . '/../../Controller/cleaner/serviceController.php');
 $cleanerId = $_SESSION['userid'];
-$services = ServiceController::getCleanerServices($cleanerId);
+$services = ServiceController::getServicesByCleaner($cleanerId);
 ?>
 <!DOCTYPE html>
 <html lang="en">

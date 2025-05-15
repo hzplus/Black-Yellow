@@ -12,3 +12,4 @@ class EditServiceController {
         return $service->updateService($serviceid, $title, $description, $price, $availability, $category, $image_path);
     }
 }
+

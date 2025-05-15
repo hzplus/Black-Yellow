@@ -19,7 +19,7 @@ class CleanerService {
         $this->availability = $availability;
     }
 
-    function getServicesByCleaner($cleanerId) {
+    public static function getServicesByCleaner($cleanerId) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT * FROM services WHERE cleanerid = ?");
         $stmt->bind_param("i", $cleanerId);
@@ -67,7 +67,17 @@ class CleanerService {
         return $services;
     }
 
-    function getServiceById($serviceid) {
+    // function getServiceById($serviceid) {
+    //     $conn = Database::getConnection();
+    //     $stmt = $conn->prepare("SELECT * FROM services WHERE serviceid = ?");
+    //     $stmt->bind_param("i", $serviceid);
+    //     $stmt->execute();
+    //     $result = $stmt->get_result();
+    //     $service = $result->fetch_assoc();
+    //     $stmt->close();
+    //     return $service;
+    // }
+    public static function getServiceById($serviceid) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT * FROM services WHERE serviceid = ?");
         $stmt->bind_param("i", $serviceid);
@@ -77,6 +87,7 @@ class CleanerService {
         $stmt->close();
         return $service;
     }
+    
 
      function updateService($serviceid, $title, $description, $price, $availability, $category, $image_path) {
         $conn = Database::getConnection();

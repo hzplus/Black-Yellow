@@ -13,7 +13,8 @@ if (!isset($_GET['serviceid'])) {
 }
 
 $serviceid = $_GET['serviceid'];
-$service = ViewServiceController::getServiceDetails($serviceid);
+$service = ViewServiceController::getServiceById($serviceid);
+
 
 if (!$service) {
     echo "Service not found.";
