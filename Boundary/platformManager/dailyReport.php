@@ -1,9 +1,11 @@
 <?php
-session_start();
 // Enable error reporting for debugging
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
+session_start();
+require_once '../../Entity/platformManager/Report.php'; 
 
 // Check user access
 if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Manager') {
@@ -11,14 +13,14 @@ if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Manager') {
     exit();
 }
 
-// Include the new report controller
-require_once '../../Entity/platformManager/Report.php'; 
-
 // Default to current date
 $selectedDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 
 // Generate the report
-$report = SimpleReport::getDailyReport($selectedDate);
+$report = Report::getDailyReport($selectedDate);
+
+// Get platform statistics for total counts - force refresh to get latest data
+$platformStats = Report::getPlatformStats();
 ?>
 
 <!DOCTYPE html>
@@ -26,11 +28,11 @@ $report = SimpleReport::getDailyReport($selectedDate);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Report | Service Platform</title>
+    <title>Daily Report | Black&Yellow Cleaning</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Custom styles for enhanced reports */
+        /* Simplified styles for enhanced reports */
         .report-container {
             max-width: 1200px;
             margin: 40px auto;
@@ -38,25 +40,21 @@ $report = SimpleReport::getDailyReport($selectedDate);
         }
         
         .report-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 15px;
             background-color: #1a1a1a;
             padding: 20px;
             border-radius: 8px;
             border: 1px solid #333;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .report-title {
             font-size: 26px;
             font-weight: bold;
             color: #FFD700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            margin: 0;
         }
         
         .report-date {
@@ -77,16 +75,11 @@ $report = SimpleReport::getDailyReport($selectedDate);
             border-radius: 5px;
             text-decoration: none;
             border: 1px solid #444;
-            display: flex;
-            align-items: center;
-            gap: 5px;
             transition: all 0.3s ease;
-            font-weight: 500;
         }
         
         .report-nav a:hover {
             background-color: rgba(255, 215, 0, 0.1);
-            border-color: #FFD700;
             transform: translateY(-2px);
         }
         
@@ -102,10 +95,6 @@ $report = SimpleReport::getDailyReport($selectedDate);
             border-radius: 8px;
             margin-bottom: 25px;
             border: 1px solid #444;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
         }
         
         .date-selector form {
@@ -113,15 +102,11 @@ $report = SimpleReport::getDailyReport($selectedDate);
             align-items: center;
             gap: 15px;
             flex-wrap: wrap;
-            width: 100%;
         }
         
         .date-selector label {
             color: #FFD700;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
         
         .date-selector input[type="date"] {
@@ -140,9 +125,6 @@ $report = SimpleReport::getDailyReport($selectedDate);
             border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
             transition: all 0.3s ease;
         }
         
@@ -165,18 +147,6 @@ $report = SimpleReport::getDailyReport($selectedDate);
             padding: 25px 20px;
             text-align: center;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .stat-card:before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: #FFD700;
         }
         
         .stat-card:hover {
@@ -195,12 +165,18 @@ $report = SimpleReport::getDailyReport($selectedDate);
             font-size: 36px;
             font-weight: bold;
             color: #FFD700;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         
         .stat-label {
             font-size: 16px;
             color: #e0e0e0;
+        }
+        
+        .stat-total {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 5px;
         }
         
         .report-section {
@@ -218,13 +194,10 @@ $report = SimpleReport::getDailyReport($selectedDate);
             font-weight: bold;
             font-size: 18px;
             border-bottom: 1px solid #444;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
         
         .table-container {
-            padding: 5px;
+            padding: 20px;
             overflow-x: auto;
         }
         
@@ -278,9 +251,6 @@ $report = SimpleReport::getDailyReport($selectedDate);
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
             transition: all 0.3s ease;
         }
         
@@ -297,9 +267,6 @@ $report = SimpleReport::getDailyReport($selectedDate);
             border-radius: 5px;
             text-decoration: none;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
             transition: all 0.3s ease;
         }
         
@@ -376,14 +343,6 @@ $report = SimpleReport::getDailyReport($selectedDate);
                 color: black;
                 border-bottom: 1px solid #ddd;
             }
-            
-            .data-table tr:hover td {
-                background-color: transparent;
-            }
-            
-            .empty-data {
-                color: #777;
-            }
         }
         
         /* Responsive Adjustments */
@@ -446,16 +405,19 @@ $report = SimpleReport::getDailyReport($selectedDate);
             <button type="submit">
                 <i class="fas fa-sync-alt"></i> Generate Report
             </button>
+            <!-- Add a hidden timestamp to force cache refresh -->
+            <input type="hidden" name="cache_buster" value="<?= time() ?>">
         </form>
     </div>
     
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon">
-                <i class="fas fa-user-plus"></i>
+                <i class="fas fa-users"></i>
             </div>
             <div class="stat-value"><?= $report['stats']['new_users_count'] ?></div>
             <div class="stat-label">New Users</div>
+            <div class="stat-total">Total: <?= $platformStats['users']['total'] ?></div>
         </div>
         
         <div class="stat-card">
@@ -464,14 +426,7 @@ $report = SimpleReport::getDailyReport($selectedDate);
             </div>
             <div class="stat-value"><?= $report['stats']['new_services_count'] ?></div>
             <div class="stat-label">New Services</div>
-        </div>
-        
-        <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-calendar-check"></i>
-            </div>
-            <div class="stat-value"><?= $report['stats']['bookings_count'] ?></div>
-            <div class="stat-label">New Bookings</div>
+            <div class="stat-total">Total: <?= $platformStats['services']['total'] ?></div>
         </div>
         
         <div class="stat-card">
@@ -480,6 +435,72 @@ $report = SimpleReport::getDailyReport($selectedDate);
             </div>
             <div class="stat-value"><?= $report['stats']['active_categories_count'] ?></div>
             <div class="stat-label">Active Categories</div>
+            <div class="stat-total">Total: <?= count($report['categories_usage']) ?></div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-percent"></i>
+            </div>
+            <div class="stat-value">
+                <?php 
+                    $userPercentage = $platformStats['users']['total'] > 0 
+                        ? round(($report['stats']['new_users_count'] / $platformStats['users']['total']) * 100) 
+                        : 0;
+                    echo $userPercentage;
+                ?>%
+            </div>
+            <div class="stat-label">User Growth Today</div>
+        </div>
+    </div>
+    
+    <!-- User Registration Breakdown -->
+    <div class="report-section">
+        <div class="section-header">
+            <i class="fas fa-user-plus"></i> New User Registrations
+        </div>
+        <div class="table-container">
+            <?php if (empty($report['new_users'])): ?>
+                <div class="empty-data">No new user registrations for this date</div>
+            <?php else: ?>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>User Role</th>
+                            <th>New Registrations</th>
+                            <th>Total Users</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        $hasRegistrations = false;
+                        foreach ($report['new_users'] as $user): 
+                            if ($user['count'] > 0) $hasRegistrations = true;
+                            
+                            // Find total for this role
+                            $totalForRole = 0;
+                            foreach ($platformStats['users']['by_role'] as $roleData) {
+                                if ($roleData['role'] === $user['role']) {
+                                    $totalForRole = $roleData['count'];
+                                    break;
+                                }
+                            }
+                        ?>
+                            <tr>
+                                <td><?= htmlspecialchars($user['role']) ?></td>
+                                <td><?= $user['count'] ?></td>
+                                <td><?= $totalForRole ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        
+                        <?php if (!$hasRegistrations): ?>
+                            <tr>
+                                <td colspan="3" class="empty-data">No new users registered today</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
         </div>
     </div>
     
@@ -497,6 +518,7 @@ $report = SimpleReport::getDailyReport($selectedDate);
                         <tr>
                             <th>Category</th>
                             <th>New Services</th>
+                            <th>Total Services</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -504,94 +526,26 @@ $report = SimpleReport::getDailyReport($selectedDate);
                         $hasData = false;
                         foreach ($report['categories_usage'] as $category): 
                             if ($category['service_count'] > 0) $hasData = true;
+                            
+                            // Find total services for this category
+                            $totalForCategory = 0;
+                            foreach ($platformStats['services']['by_category'] as $catData) {
+                                if ($catData['category'] === $category['category_name']) {
+                                    $totalForCategory = $catData['count'];
+                                    break;
+                                }
+                            }
                         ?>
                             <tr>
                                 <td><?= htmlspecialchars($category['category_name']) ?></td>
                                 <td><?= $category['service_count'] ?></td>
+                                <td><?= $totalForCategory ?></td>
                             </tr>
                         <?php endforeach; ?>
                         
                         <?php if (!$hasData): ?>
                             <tr>
-                                <td colspan="2" class="empty-data">No new services were created in any category today</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-    </div>
-    
-    <!-- New Users Section -->
-    <div class="report-section">
-        <div class="section-header">
-            <i class="fas fa-user-plus"></i> New User Registrations
-        </div>
-        <div class="table-container">
-            <?php if (empty($report['new_users'])): ?>
-                <div class="empty-data">No new user registrations for this date</div>
-            <?php else: ?>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>User Role</th>
-                            <th>Number of Registrations</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php 
-                        $hasRegistrations = false;
-                        foreach ($report['new_users'] as $user): 
-                            if ($user['count'] > 0) $hasRegistrations = true;
-                        ?>
-                            <tr>
-                                <td><?= htmlspecialchars($user['role']) ?></td>
-                                <td><?= $user['count'] ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                        
-                        <?php if (!$hasRegistrations): ?>
-                            <tr>
-                                <td colspan="2" class="empty-data">No new users registered today</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-    </div>
-    
-    <!-- New Bookings Section -->
-    <div class="report-section">
-        <div class="section-header">
-            <i class="fas fa-calendar-check"></i> New Bookings
-        </div>
-        <div class="table-container">
-            <?php if (empty($report['bookings'])): ?>
-                <div class="empty-data">No new bookings for this date</div>
-            <?php else: ?>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Service Category</th>
-                            <th>Number of Bookings</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php 
-                        $hasBookings = false;
-                        foreach ($report['bookings'] as $booking):
-                            if ($booking['count'] > 0) $hasBookings = true; 
-                        ?>
-                            <tr>
-                                <td><?= htmlspecialchars($booking['category']) ?></td>
-                                <td><?= $booking['count'] ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                        
-                        <?php if (!$hasBookings): ?>
-                            <tr>
-                                <td colspan="2" class="empty-data">No new bookings were made today</td>
+                                <td colspan="3" class="empty-data">No new services were created in any category today</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -616,11 +570,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('.date-selector form');
     form.addEventListener('submit', function(e) {
         // Add a timestamp to prevent caching
-        const hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = 'timestamp';
-        hiddenInput.value = new Date().getTime();
-        this.appendChild(hiddenInput);
+        const hiddenInput = document.querySelector('input[name="cache_buster"]');
+        if (hiddenInput) {
+            hiddenInput.value = new Date().getTime();
+        } else {
+            const newInput = document.createElement('input');
+            newInput.type = 'hidden';
+            newInput.name = 'cache_buster';
+            newInput.value = new Date().getTime();
+            this.appendChild(newInput);
+        }
     });
 });
 </script>

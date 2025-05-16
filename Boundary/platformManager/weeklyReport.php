@@ -5,41 +5,42 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
-require_once '../../Controller/platformManager/weeklyReportController.php';
+require_once '../../Entity/platformManager/Report.php';
 
+// Check user access
 if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Manager') {
     header("Location: ../../login.php");
     exit();
 }
 
-$controller = new WeeklyReportController();
-
-// Default to current week
+// Default to current date
 $selectedDate = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
 
 // Generate the report
-$report = $controller->generateReport($selectedDate);
+$report = Report::getWeeklyReport($selectedDate);
 
-// Calculate totals
-$totalNewServices = 0;
-foreach ($report['new_services'] as $service) {
-    $totalNewServices += $service['count'];
-}
+// Get platform statistics for total counts - force refresh
+$platformStats =    Report::getPlatformStats();
 
+// Calculate totals for this week
 $totalNewUsers = 0;
-foreach ($report['new_users'] as $user) {
-    $totalNewUsers += $user['count'];
+$totalNewServices = 0;
+foreach ($report['daily_breakdown'] as $day) {
+    $totalNewUsers += $day['new_users_count'];
+    $totalNewServices += $day['new_services_count'];
 }
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Weekly Report</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Report | Black&Yellow Cleaning</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        /* Custom styles for enhanced reports */
+        /* Simplified styles for enhanced reports */
         .report-container {
             max-width: 1200px;
             margin: 40px auto;
@@ -47,21 +48,27 @@ foreach ($report['new_users'] as $user) {
         }
         
         .report-header {
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            margin-bottom: 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-            gap: 15px;
         }
         
         .report-title {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: bold;
             color: #FFD700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            margin: 0;
+        }
+        
+        .report-date {
+            font-size: 18px;
+            color: #e0e0e0;
+            margin-top: 5px;
         }
         
         .report-nav {
@@ -76,16 +83,11 @@ foreach ($report['new_users'] as $user) {
             border-radius: 5px;
             text-decoration: none;
             border: 1px solid #444;
-            display: flex;
-            align-items: center;
-            gap: 5px;
             transition: all 0.3s ease;
-            font-weight: 500;
         }
         
         .report-nav a:hover {
             background-color: rgba(255, 215, 0, 0.1);
-            border-color: #FFD700;
             transform: translateY(-2px);
         }
         
@@ -96,15 +98,11 @@ foreach ($report['new_users'] as $user) {
         }
         
         .date-selector {
-            background-color: #1a1a1a;
+            background-color: #252525;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 25px;
             border: 1px solid #444;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
         }
         
         .date-selector form {
@@ -112,20 +110,16 @@ foreach ($report['new_users'] as $user) {
             align-items: center;
             gap: 15px;
             flex-wrap: wrap;
-            width: 100%;
         }
         
         .date-selector label {
             color: #FFD700;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
         
         .date-selector input[type="date"] {
             padding: 10px;
-            background-color: #252525;
+            background-color: #1a1a1a;
             border: 1px solid #444;
             color: #fff;
             border-radius: 4px;
@@ -139,9 +133,6 @@ foreach ($report['new_users'] as $user) {
             border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
             transition: all 0.3s ease;
         }
         
@@ -159,29 +150,17 @@ foreach ($report['new_users'] as $user) {
         
         .stat-card {
             background-color: #1a1a1a;
-            border: 1px solid #444;
-            border-radius: 8px;
+            border: 1px solid #333;
+            border-radius: 10px;
             padding: 25px 20px;
             text-align: center;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
         }
         
         .stat-card:hover {
             transform: translateY(-5px);
             border-color: #FFD700;
-            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
-        }
-        
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: #FFD700;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
         
         .stat-icon {
@@ -194,7 +173,7 @@ foreach ($report['new_users'] as $user) {
             font-size: 36px;
             font-weight: bold;
             color: #FFD700;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
         
         .stat-label {
@@ -202,9 +181,15 @@ foreach ($report['new_users'] as $user) {
             color: #e0e0e0;
         }
         
+        .stat-total {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+        
         .report-section {
             background-color: #1a1a1a;
-            border: 1px solid #444;
+            border: 1px solid #333;
             border-radius: 8px;
             margin-bottom: 25px;
             overflow: hidden;
@@ -217,13 +202,10 @@ foreach ($report['new_users'] as $user) {
             font-weight: bold;
             font-size: 18px;
             border-bottom: 1px solid #444;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
         
         .table-container {
-            padding: 5px;
+            padding: 20px;
             overflow-x: auto;
         }
         
@@ -277,9 +259,6 @@ foreach ($report['new_users'] as $user) {
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
             transition: all 0.3s ease;
         }
         
@@ -296,24 +275,12 @@ foreach ($report['new_users'] as $user) {
             border-radius: 5px;
             text-decoration: none;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
             transition: all 0.3s ease;
         }
         
         .btn-back:hover {
             background-color: rgba(255, 215, 0, 0.1);
             transform: translateY(-2px);
-        }
-        
-        .weekly-badge {
-            background-color: #3498db;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 14px;
-            margin-left: 10px;
         }
         
         /* Print Styles */
@@ -332,10 +299,19 @@ foreach ($report['new_users'] as $user) {
                 margin: 0;
             }
             
+            .report-header {
+                background-color: white;
+                border: none;
+            }
+            
             .report-title {
                 color: black;
                 text-align: center;
                 margin-bottom: 30px;
+            }
+            
+            .report-date {
+                color: #555;
             }
             
             .stat-card {
@@ -375,20 +351,6 @@ foreach ($report['new_users'] as $user) {
                 color: black;
                 border-bottom: 1px solid #ddd;
             }
-            
-            .data-table tr:hover td {
-                background-color: transparent;
-            }
-            
-            .empty-data {
-                color: #777;
-            }
-            
-            .weekly-badge {
-                background-color: #f5f5f5;
-                color: black;
-                border: 1px solid #ddd;
-            }
         }
         
         /* Responsive Adjustments */
@@ -420,9 +382,14 @@ foreach ($report['new_users'] as $user) {
 
 <div class="report-container">
     <div class="report-header">
-        <h1 class="report-title">
-            <i class="fas fa-calendar-week"></i> Weekly Report - <?= date('F j', strtotime($report['start_date'])) ?> to <?= date('F j, Y', strtotime($report['end_date'])) ?>
-        </h1>
+        <div>
+            <h1 class="report-title">
+                <i class="fas fa-calendar-week"></i> Weekly Report
+            </h1>
+            <div class="report-date">
+                <?= date('F j', strtotime($report['start_date'])) ?> to <?= date('F j, Y', strtotime($report['end_date'])) ?>
+            </div>
+        </div>
         
         <div class="report-nav">
             <a href="dailyReport.php">
@@ -440,30 +407,34 @@ foreach ($report['new_users'] as $user) {
     <div class="date-selector">
         <form method="GET" action="<?= $_SERVER['PHP_SELF'] ?>">
             <label for="date">
-                <i class="fas fa-calendar-alt"></i> Select Week (any date in the week):
+                <i class="fas fa-calendar-alt"></i> Select Date (any day in the week):
             </label>
             <input type="date" id="date" name="date" value="<?= $selectedDate ?>" max="<?= date('Y-m-d') ?>">
             <button type="submit">
                 <i class="fas fa-sync-alt"></i> Generate Report
             </button>
+            <!-- Add a hidden timestamp to force cache refresh -->
+            <input type="hidden" name="cache_buster" value="<?= time() ?>">
         </form>
     </div>
     
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-icon">
-                <i class="fas fa-concierge-bell"></i>
+                <i class="fas fa-users"></i>
             </div>
-            <div class="stat-value"><?= $totalNewServices ?></div>
-            <div class="stat-label">New Services</div>
+            <div class="stat-value"><?= $totalNewUsers ?></div>
+            <div class="stat-label">New Users This Week</div>
+            <div class="stat-total">Total: <?= $platformStats['users']['total'] ?></div>
         </div>
         
         <div class="stat-card">
             <div class="stat-icon">
-                <i class="fas fa-user-plus"></i>
+                <i class="fas fa-concierge-bell"></i>
             </div>
-            <div class="stat-value"><?= $totalNewUsers ?></div>
-            <div class="stat-label">New Users</div>
+            <div class="stat-value"><?= $totalNewServices ?></div>
+            <div class="stat-label">New Services This Week</div>
+            <div class="stat-total">Total: <?= $platformStats['services']['total'] ?></div>
         </div>
         
         <div class="stat-card">
@@ -473,12 +444,20 @@ foreach ($report['new_users'] as $user) {
             <div class="stat-value"><?= count($report['categories_usage']) ?></div>
             <div class="stat-label">Active Categories</div>
         </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-value"><?= count($report['daily_breakdown']) ?></div>
+            <div class="stat-label">Days in Review</div>
+        </div>
     </div>
     
     <!-- Daily Breakdown Section -->
     <div class="report-section">
         <div class="section-header">
-            <i class="fas fa-chart-bar"></i> Daily Activity
+            <i class="fas fa-chart-bar"></i> Daily Activity Breakdown
         </div>
         <div class="table-container">
             <?php if (empty($report['daily_breakdown'])): ?>
@@ -488,16 +467,16 @@ foreach ($report['new_users'] as $user) {
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>New Services</th>
                             <th>New Users</th>
+                            <th>New Services</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($report['daily_breakdown'] as $day): ?>
                             <tr>
                                 <td><?= date('l, F j, Y', strtotime($day['date'])) ?></td>
-                                <td><?= $day['new_services_count'] ?? 0 ?></td>
                                 <td><?= $day['new_users_count'] ?? 0 ?></td>
+                                <td><?= $day['new_services_count'] ?? 0 ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -506,36 +485,7 @@ foreach ($report['new_users'] as $user) {
         </div>
     </div>
     
-    <!-- Category Usage Section -->
-    <div class="report-section">
-        <div class="section-header">
-            <i class="fas fa-th-list"></i> Service Category Usage
-        </div>
-        <div class="table-container">
-            <?php if (empty($report['categories_usage'])): ?>
-                <div class="empty-data">No category usage data available for this week</div>
-            <?php else: ?>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th>Service Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($report['categories_usage'] as $category): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($category['category_name']) ?></td>
-                                <td><?= $category['service_count'] ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-    </div>
-    
-    <!-- New Users Section -->
+    <!-- User Registration Breakdown -->
     <div class="report-section">
         <div class="section-header">
             <i class="fas fa-user-plus"></i> New User Registrations
@@ -548,14 +498,67 @@ foreach ($report['new_users'] as $user) {
                     <thead>
                         <tr>
                             <th>User Role</th>
-                            <th>Number of Registrations</th>
+                            <th>New Registrations</th>
+                            <th>Total Users</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($report['new_users'] as $user): ?>
+                        <?php 
+                        foreach ($report['new_users'] as $user): 
+                            // Find total for this role
+                            $totalForRole = 0;
+                            foreach ($platformStats['users']['by_role'] as $roleData) {
+                                if ($roleData['role'] === $user['role']) {
+                                    $totalForRole = $roleData['count'];
+                                    break;
+                                }
+                            }
+                        ?>
                             <tr>
                                 <td><?= htmlspecialchars($user['role']) ?></td>
                                 <td><?= $user['count'] ?></td>
+                                <td><?= $totalForRole ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+    </div>
+    
+    <!-- Service Category Usage Section -->
+    <div class="report-section">
+        <div class="section-header">
+            <i class="fas fa-th-list"></i> Service Category Activity
+        </div>
+        <div class="table-container">
+            <?php if (empty($report['categories_usage'])): ?>
+                <div class="empty-data">No category usage data available for this week</div>
+            <?php else: ?>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>New Services</th>
+                            <th>Total Services</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        foreach ($report['categories_usage'] as $category):
+                            // Find total services for this category
+                            $totalForCategory = 0;
+                            foreach ($platformStats['services']['by_category'] as $catData) {
+                                if ($catData['category'] === $category['category_name']) {
+                                    $totalForCategory = $catData['count'];
+                                    break;
+                                }
+                            }
+                        ?>
+                            <tr>
+                                <td><?= htmlspecialchars($category['category_name']) ?></td>
+                                <td><?= $category['service_count'] ?></td>
+                                <td><?= $totalForCategory ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -578,6 +581,7 @@ foreach ($report['new_users'] as $user) {
                         <tr>
                             <th>Category</th>
                             <th>Number of Services</th>
+                            <th>% of Weekly Total</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -585,6 +589,7 @@ foreach ($report['new_users'] as $user) {
                             <tr>
                                 <td><?= htmlspecialchars($service['category']) ?></td>
                                 <td><?= $service['count'] ?></td>
+                                <td><?= $totalNewServices > 0 ? round(($service['count'] / $totalNewServices) * 100) : 0 ?>%</td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -602,6 +607,26 @@ foreach ($report['new_users'] as $user) {
         </a>
     </div>
 </div>
+
+<script>
+// Add time parameter to prevent caching when generating reports
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.date-selector form');
+    form.addEventListener('submit', function(e) {
+        // Add a timestamp to prevent caching
+        const hiddenInput = document.querySelector('input[name="cache_buster"]');
+        if (hiddenInput) {
+            hiddenInput.value = new Date().getTime();
+        } else {
+            const newInput = document.createElement('input');
+            newInput.type = 'hidden';
+            newInput.name = 'cache_buster';
+            newInput.value = new Date().getTime();
+            this.appendChild(newInput);
+        }
+    });
+});
+</script>
 
 </body>
 </html>
