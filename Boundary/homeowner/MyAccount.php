@@ -75,6 +75,152 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>My Account - Black&Yellow Cleaning</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <style>
+        .content-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            transform: translateX(-5px);
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .account-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+        
+        .account-section {
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .account-section h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 1.5rem;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert.success {
+            background-color: rgba(76, 175, 80, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .alert.success:before {
+            content: '✓';
+            font-weight: bold;
+        }
+        
+        .alert.error {
+            background-color: rgba(244, 67, 54, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+        
+        .alert.error:before {
+            content: '✗';
+            font-weight: bold;
+        }
+        
+        .account-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group label {
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            padding: 12px 15px;
+            background-color: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            color: var(--text-light);
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.1);
+            outline: none;
+        }
+        
+        .field-hint {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+        
+        .form-actions {
+            margin-top: 10px;
+        }
+        
+        .primary-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: var(--bg-darker);
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .primary-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .account-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
 

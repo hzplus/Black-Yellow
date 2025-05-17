@@ -47,6 +47,264 @@ $categories = $controller->getAllCategories();
     <title>Shortlisted Cleaners - Black&Yellow Cleaning</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <style>
+        .content-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            transform: translateX(-5px);
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .filter-row {
+            background-color: var(--bg-light);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .filter-row input,
+        .filter-row select {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 15px;
+            border-radius: 5px;
+            background-color: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+        
+        .filter-row button {
+            padding: 12px 25px;
+            background-color: var(--primary);
+            color: var(--bg-darker);
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-row button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+        
+        .clear-btn {
+            padding: 12px 20px;
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .clear-btn:hover {
+            background-color: rgba(255, 215, 0, 0.1);
+        }
+        
+        /* 2x2 Grid Layout for Cleaners */
+        .cleaner-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .cleaner-card {
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .cleaner-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-header {
+            padding: 15px 20px;
+            background-color: var(--bg-darker);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .cleaner-name {
+            color: var(--primary);
+            margin: 0;
+            font-size: 1.4rem;
+        }
+        
+        .card-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
+        }
+        
+        .cleaner-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+        }
+        
+        .services-list {
+            margin-top: 15px;
+        }
+        
+        .cleaner-services {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        
+        .service-tag {
+            background-color: rgba(255, 215, 0, 0.1);
+            color: var(--primary);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            border: 1px solid var(--primary);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .view-profile-btn {
+            flex: 1;
+            padding: 10px 15px;
+            background-color: var(--primary);
+            color: var(--bg-darker);
+            text-align: center;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .view-profile-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .remove-btn {
+            flex: 1;
+            padding: 10px 15px;
+            background-color: transparent;
+            color: var(--primary);
+            text-align: center;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border: 1px solid var(--primary);
+            cursor: pointer;
+        }
+        
+        .remove-btn:hover {
+            background-color: rgba(255, 215, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 0;
+            grid-column: span 2;
+        }
+        
+        .empty-state p {
+            margin-bottom: 20px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+        
+        .find-cleaners-btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: var(--primary);
+            color: var(--bg-darker);
+            border-radius: 5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .find-cleaners-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .cleaner-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .cleaner-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-row input,
+            .filter-row select,
+            .filter-row button,
+            .clear-btn {
+                width: 100%;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -80,9 +338,9 @@ $categories = $controller->getAllCategories();
     <!-- Cleaner Grid -->
     <div class="cleaner-grid">
         <?php if (empty($cleaners)): ?>
-            <div style="text-align: center; grid-column: span 2; padding: 40px 0;">
+            <div class="empty-state">
                 <p>You haven't shortlisted any cleaners yet.</p>
-                <a href="BrowseCleaners.php" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #FFD700; color: black; text-decoration: none; border-radius: 5px; font-weight: bold;">Find Cleaners</a>
+                <a href="BrowseCleaners.php" class="find-cleaners-btn">Find Cleaners</a>
             </div>
         <?php else: ?>
             <?php foreach ($cleaners as $cleaner): ?>

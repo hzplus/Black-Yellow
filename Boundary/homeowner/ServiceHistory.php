@@ -62,6 +62,341 @@ $categories = $controller->getAllCategories();
     <title>Service History - Black&Yellow Cleaning</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <style>
+        .content-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            transform: translateX(-5px);
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .sub-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin: 30px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert.success {
+            background-color: rgba(76, 175, 80, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .alert.error {
+            background-color: rgba(244, 67, 54, 0.1);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+        
+        .filter-row {
+            background-color: var(--bg-light);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .filter-row input,
+        .filter-row select {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 15px;
+            border-radius: 5px;
+            background-color: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+        
+        .filter-row button {
+            padding: 12px 25px;
+            background-color: var(--primary);
+            color: var(--bg-darker);
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-row button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+        
+        .filter-row label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-light);
+            margin-bottom: 0;
+        }
+        
+        .filter-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+        
+        .clear-btn {
+            padding: 12px 20px;
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .clear-btn:hover {
+            background-color: rgba(255, 215, 0, 0.1);
+        }
+        
+        /* Booking Cards for Pending Bookings */
+        .pending-bookings {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .booking-card {
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            border: 1px solid var(--primary);
+            padding: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .booking-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .booking-card::before {
+            content: 'PENDING';
+            position: absolute;
+            top: 10px;
+            right: -30px;
+            background-color: var(--primary);
+            color: var(--bg-darker);
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 5px 30px;
+            transform: rotate(45deg);
+        }
+        
+        .booking-date {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .booking-details h3 {
+            color: var(--text-light);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .cleaner-name, 
+        .service-category, 
+        .service-notes {
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .booking-price {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 15px 0;
+        }
+        
+        .booking-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+        
+        .cancel-btn {
+            flex: 1;
+            padding: 10px 0;
+            background-color: transparent;
+            color: var(--error);
+            border: 1px solid var(--error);
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .cancel-btn:hover {
+            background-color: rgba(244, 67, 54, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .view-profile-btn,
+        .view-service-btn {
+            flex: 1;
+            padding: 10px 0;
+            text-align: center;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .view-profile-btn {
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .view-profile-btn:hover {
+            background-color: rgba(255, 215, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .view-service-btn {
+            background-color: var(--primary);
+            color: var(--bg-darker);
+            border: none;
+        }
+        
+        .view-service-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        /* History Cards */
+        .history-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .history-card {
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .history-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .history-date {
+            font-weight: bold;
+            color: var(--text-light);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .history-details h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .history-price {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 15px 0;
+        }
+        
+        .history-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+        
+        .no-results {
+            grid-column: span 2;
+            text-align: center;
+            padding: 40px;
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .pending-bookings,
+            .history-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .pending-bookings,
+            .history-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .booking-actions,
+            .history-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -75,12 +410,14 @@ $categories = $controller->getAllCategories();
     
     <?php if (isset($cancelSuccess)): ?>
         <div class="alert success">
+            <i class="fas fa-check-circle"></i>
             <strong>Success:</strong> Your booking has been canceled.
         </div>
     <?php endif; ?>
     
     <?php if (isset($cancelError)): ?>
         <div class="alert error">
+            <i class="fas fa-exclamation-circle"></i>
             <strong>Error:</strong> <?= $cancelError; ?>
         </div>
     <?php endif; ?>
@@ -218,4 +555,4 @@ $categories = $controller->getAllCategories();
 </div>
 
 </body>
-</html> 
+</html>

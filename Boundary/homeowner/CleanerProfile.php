@@ -1,5 +1,5 @@
 <?php
-// Boundary/homeowner/CleanerProfile.php
+// Improved CleanerProfile.php
 session_start();
 require_once __DIR__ . '/../../Controller/homeowner/CleanerProfileController.php';
 
@@ -54,6 +54,217 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_shortlist'])) 
     <title><?php echo htmlspecialchars($cleaner['username']); ?> - Cleaner Profile</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <style>
+        .profile-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .profile-card {
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            color: var(--primary);
+            margin: 20px 0;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            transform: translateX(-5px);
+        }
+        
+        .profile-header-section {
+            display: flex;
+            padding: 30px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-darker);
+        }
+        
+        .profile-picture-container {
+            flex-shrink: 0;
+            margin-right: 30px;
+        }
+        
+        .profile-picture {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 3px solid var(--primary);
+            background-color: var(--bg-light);
+        }
+        
+        .profile-header-content {
+            flex: 1;
+        }
+        
+        .profile-header {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 2rem;
+        }
+        
+        .profile-info {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .shortlist-form {
+            margin-top: 20px;
+        }
+        
+        .shortlist-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 25px;
+            background-color: var(--primary);
+            color: var(--bg-darker);
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .shortlist-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+        
+        .shortlist-btn.remove {
+            background-color: #333;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .shortlist-btn.remove:hover {
+            background-color: rgba(255, 215, 0, 0.1);
+        }
+        
+        .shortlist-btn:before {
+            content: '★ ';
+            margin-right: 8px;
+        }
+        
+        .shortlist-btn.remove:before {
+            content: '☆ ';
+        }
+        
+        .services-section, 
+        .contact-section {
+            padding: 30px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .section-title {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .service-box {
+            background-color: var(--bg-darker);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .service-box:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .service-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .service-title {
+            color: var(--text-light);
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .service-price {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        
+        .service-category {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            background-color: rgba(255, 215, 0, 0.1);
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: auto;
+        }
+        
+        .no-services {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        
+        .contact-section p {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .contact-section p:before {
+            content: '✉️';
+            margin-right: 10px;
+            color: var(--primary);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .profile-header-section {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .profile-picture-container {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+            
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
 

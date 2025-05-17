@@ -1,7 +1,6 @@
 <?php
 // Entity/BrowseCleanersEntity.php
-require_once __DIR__ . '/../db/Database.php';
-
+require_once __DIR__ . '/../../db/Database.php';
 class BrowseCleanersEntity {
     /**
      * Get all active cleaners

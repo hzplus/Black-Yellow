@@ -1,5 +1,4 @@
 <?php
-// Boundary/homeowner/BrowseCleaners.php
 session_start();
 require_once __DIR__ . '/../../Controller/homeowner/BrowseCleanersController.php';
 
@@ -42,6 +41,206 @@ $shortlistedIds = $controller->getShortlistedCleanerIds($homeownerId);
     <title>Browse Cleaners - Black&Yellow Cleaning</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <style>
+        .content-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .back-button:hover {
+            transform: translateX(-5px);
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .filter-row {
+            background-color: var(--bg-light);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .filter-row input,
+        .filter-row select {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 15px;
+            border-radius: 5px;
+            background-color: var(--bg-darker);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+        
+        .filter-row button {
+            padding: 12px 25px;
+            background-color: var(--primary);
+            color: var(--bg-darker);
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-row button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-3px);
+        }
+        
+        .clear-btn {
+            padding: 12px 20px;
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .clear-btn:hover {
+            background-color: rgba(255, 215, 0, 0.1);
+        }
+        
+        /* 2x2 Grid Layout for Cleaners */
+        .cleaner-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .cleaner-card {
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .cleaner-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-header {
+            padding: 15px 20px;
+            background-color: var(--bg-darker);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .cleaner-name {
+            color: var(--primary);
+            margin: 0;
+            font-size: 1.4rem;
+        }
+        
+        .card-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1;
+        }
+        
+        .cleaner-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--primary);
+        }
+        
+        .services-list {
+            margin-top: 15px;
+        }
+        
+        .cleaner-services {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        
+        .service-tag {
+            background-color: rgba(255, 215, 0, 0.1);
+            color: var(--primary);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            border: 1px solid var(--primary);
+        }
+        
+        .view-profile-btn {
+            display: inline-block;
+            width: 100%;
+            padding: 12px 0;
+            background-color: var(--primary);
+            color: var(--bg-darker);
+            text-align: center;
+            border-radius: 5px;
+            font-weight: 600;
+            margin-top: auto;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .view-profile-btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .cleaner-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .cleaner-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-row input,
+            .filter-row select,
+            .filter-row button,
+            .clear-btn {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
 
