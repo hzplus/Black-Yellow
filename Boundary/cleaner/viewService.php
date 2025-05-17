@@ -38,6 +38,9 @@ if (!$service) {
     <h2>Service Details</h2>
     <div class="service-detail-card">
         <h3><?php echo htmlspecialchars($service['title']); ?></h3>
+        <a href="serviceNoOfViews.php?serviceid=<?= $serviceid ?>" class="btn">View Count</a>
+        <a href="serviceShortlists.php?serviceid=<?= $serviceid ?>" class="btn">Shortlists</a>
+
         <p><?php echo htmlspecialchars($service['description']); ?></p>
         <p><strong>Price:</strong> $<?php echo htmlspecialchars($service['price']); ?></p>
         <p><strong>Availability:</strong> <?php echo htmlspecialchars($service['availability']); ?></p>
@@ -45,10 +48,9 @@ if (!$service) {
         <?php if (!empty($service['image_path'])): ?>
             <img src="../../<?php echo htmlspecialchars($service['image_path']); ?>" width="200">
         <?php endif; ?>
-        <p><strong>Views:</strong> <?= htmlspecialchars($service['view_count']) ?></p>
         <div style="margin-top: 20px;">
-            <a href="editService.php?serviceid=<?= $serviceid ?>" class="button">Edit</a>
-            <a href="removeService.php?serviceid=<?= $serviceid ?>" class="button" onclick="return confirm('Are you sure you want to delete this service?');">Remove</a>
+            <a href="editService.php?serviceid=<?= $serviceid ?>" class="btn">Edit</a>
+            <a href="removeService.php?serviceid=<?= $serviceid ?>" class="btn" onclick="return confirm('Are you sure you want to delete this service?');">Remove</a>
         </div>
 
     </div>

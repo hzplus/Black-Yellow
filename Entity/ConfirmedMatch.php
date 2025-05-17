@@ -67,7 +67,7 @@ class ConfirmedMatch {
         return $matches;
     }
 
-    public function searchConfirmedMatchesByCleaner($cleanerId, $keyword = '', $category = null, $startDate = null, $endDate = null) {
+    public static function searchConfirmedMatchesByCleaner($cleanerId, $keyword = '', $category = null, $startDate = null, $endDate = null) {
         $conn = Database::getConnection();
     
         $query = "

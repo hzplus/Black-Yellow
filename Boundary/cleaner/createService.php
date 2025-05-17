@@ -33,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
 
-    CreateServiceController::handleCreateRequest(
+    CreateServiceController::createService(
         $cleanerId,
         $title,
         $description,

@@ -15,11 +15,14 @@ if (!isset($_GET['serviceid'])) {
 $serviceid = $_GET['serviceid'];
 
 // Optional: show confirmation or log action
-$success = RemoveServiceController::delete($serviceid);
+$success = RemoveServiceController::deleteService($serviceid);
 
 if ($success) {
-    header("Location: serviceListings.php");
+    // Redirect with success message
+    header("Location: serviceListings.php?deleted=1");
     exit();
 } else {
-    echo "Failed to remove service.";
+    // Redirect with failure message
+    header("Location: serviceListings.php?deleted=0");
+    exit();
 }

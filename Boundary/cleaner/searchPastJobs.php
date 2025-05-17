@@ -9,13 +9,9 @@ require_once(__DIR__ . '/../../Controller/cleaner/searchPastJobsController.php')
 
 $cleanerId = $_SESSION['userid'];
 $keyword = $_GET['keyword'] ?? '';
-// $category = $_GET['category'] ?? null;
-// $startDate = $_GET['start_date'] ?? null;
-// $endDate = $_GET['end_date'] ?? null;
 
-// $jobs = SearchPastJobsController::search($cleanerId, $keyword, $category, $startDate, $endDate);
-$jobs = SearchPastJobsController::search($cleanerId, $keyword);
-// $allCategories = ['All-in-one', 'Floor', 'Laundry', 'Toilet', 'Window'];
+
+$jobs = SearchPastJobsController::searchConfirmedMatchesByCleaner($cleanerId, $keyword);
 ?>
 
 <!DOCTYPE html>
