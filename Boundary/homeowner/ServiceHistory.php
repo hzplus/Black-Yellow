@@ -69,6 +69,7 @@ $categories = $controller->getAllCategories();
 </head>
 <body>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     <h1>Service History</h1>
 =======
 
@@ -76,6 +77,12 @@ $categories = $controller->getAllCategories();
 <?php include '../../assets/includes/homeowner-header.php'; ?>
 >>>>>>> Stashed changes
 
+=======
+
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/homeowner-header.php'; ?>
+
+>>>>>>> Stashed changes
 <div class="content-container">
     <a href="HomeownerDashboard.php" class="back-button">← Back to Dashboard</a>
     

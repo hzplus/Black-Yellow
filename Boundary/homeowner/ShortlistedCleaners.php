@@ -1,5 +1,6 @@
 <?php
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 require_once(__DIR__ . '/../../controller/HomeownerController.php');
 session_start();
 
@@ -20,10 +21,23 @@ require_once __DIR__ . '/../../Controller/homeowner/ShortlistedCleanersControlle
 // Redirect if not logged in as homeowner
 if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Homeowner') {
 >>>>>>> Stashed changes
+=======
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+// Boundary/homeowner/ShortlistedCleaners.php
+session_start();
+require_once __DIR__ . '/../../Controller/homeowner/ShortlistedCleanersController.php';
+
+// Redirect if not logged in as homeowner
+if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Homeowner') {
+>>>>>>> Stashed changes
     header("Location: ../login.php");
     exit();
 }
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 $controller = new HomeownerController();
 
@@ -63,6 +77,8 @@ if ($searchTerm) {
     $cleaners = $filteredCleaners;
 }
 =======
+=======
+>>>>>>> Stashed changes
 // Create controller instance
 $controller = new ShortlistedCleanersController();
 
@@ -91,6 +107,9 @@ if (!empty($search) || !empty($category)) {
 
 // Get categories for dropdown
 $categories = $controller->getAllCategories();
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 ?>
 
@@ -99,6 +118,7 @@ $categories = $controller->getAllCategories();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     <title>Shortlisted Cleaners</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
@@ -109,6 +129,8 @@ $categories = $controller->getAllCategories();
     <!-- Back Button (Similar to CleanerListings.php) -->
     <a href="HomeownerDashboard.php" class="back-button">← Back</a>
 =======
+=======
+>>>>>>> Stashed changes
     <title>Shortlisted Cleaners - Black&Yellow Cleaning</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
@@ -120,12 +142,16 @@ $categories = $controller->getAllCategories();
     
 <div class="content-container">
     <a href="HomeownerDashboard.php" class="back-button">← Back to Dashboard</a>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     
     <h1 class="section-title">Shortlisted Cleaners</h1>
     
     <!-- Search and Filter Form -->
     <form method="GET" class="filter-row">
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
         <input type="text" name="search" placeholder="Search..." value="<?= htmlspecialchars($searchTerm) ?>">
         <select name="filter">
@@ -137,6 +163,8 @@ $categories = $controller->getAllCategories();
     
     <!-- Cleaner Grid Section in 2x2 Grid (similar to CleanerListings.php) -->
 =======
+=======
+>>>>>>> Stashed changes
         <input type="text" name="search" placeholder="Search..." value="<?= htmlspecialchars($search) ?>">
         
         <select name="category">
@@ -155,11 +183,15 @@ $categories = $controller->getAllCategories();
     </form>
     
     <!-- Cleaner Grid -->
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     <div class="cleaner-grid">
         <?php if (empty($cleaners)): ?>
             <div style="text-align: center; grid-column: span 2; padding: 40px 0;">
                 <p>You haven't shortlisted any cleaners yet.</p>
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
                 <a href="CleanerListings.php" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #FFD700; color: black; text-decoration: none; border-radius: 5px; font-weight: bold;">Find Cleaners</a>
             </div>
@@ -210,6 +242,8 @@ $categories = $controller->getAllCategories();
                                 <button type="submit" class="shortlist-btn">Remove from Shortlist</button>
                             </form>
 =======
+=======
+>>>>>>> Stashed changes
                 <a href="BrowseCleaners.php" style="display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #FFD700; color: black; text-decoration: none; border-radius: 5px; font-weight: bold;">Find Cleaners</a>
             </div>
         <?php else: ?>
@@ -256,6 +290,9 @@ $categories = $controller->getAllCategories();
                                     </button>
                                 </form>
                             </div>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
                         </div>
                     </div>
@@ -264,6 +301,11 @@ $categories = $controller->getAllCategories();
         <?php endif; ?>
     </div>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+</div>
+
+>>>>>>> Stashed changes
 =======
 </div>
 
