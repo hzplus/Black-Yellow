@@ -1,6 +1,6 @@
 <?php
 // Controller/homeowner/ServiceDetailsController.php
-require_once __DIR__ . '/../../Entity/homeownerServiceDetailsEntity.php';
+require_once __DIR__ . '/../../Entity/homeowner/ServiceDetailsEntity.php';
 
 class ServiceDetailsController {
     private $entity;
