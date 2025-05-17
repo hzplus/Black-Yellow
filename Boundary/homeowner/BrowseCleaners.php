@@ -1,23 +1,18 @@
 <?php
+// Boundary/homeowner/BrowseCleaners.php
 session_start();
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+require_once __DIR__ . '/../../Controller/homeowner/BrowseCleanersController.php';
 
-// Redirect if not logged in
+// Redirect if not logged in as homeowner
 if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Homeowner') {
     header("Location: ../login.php");
     exit();
 }
 
-// Include controller
-require_once(__DIR__ . '/../../Controller/homeowner/CleanerListingsController.php');
-require_once(__DIR__ . '/../../Controller/homeowner/ShortlistController.php');
+// Create controller instance
+$controller = new BrowseCleanersController();
 
-$controller = new CleanerListingsController();
-$shortlistController = new ShortlistController();
-
-// Get homeowner ID
+// Get homeowner ID from session
 $homeownerId = $_SESSION['userid'];
 
 // Handle search and filtering
@@ -25,7 +20,7 @@ $search = $_GET['search'] ?? '';
 $category = $_GET['category'] ?? '';
 $sortBy = $_GET['sort'] ?? 'name';
 
-// Get cleaners
+// Get cleaners based on search parameters
 if (!empty($search) || !empty($category)) {
     $cleaners = $controller->searchCleaners($search, $category, $sortBy);
 } else {
@@ -44,77 +39,9 @@ $shortlistedIds = $controller->getShortlistedCleanerIds($homeownerId);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Available Cleaners - Cleaning Service</title>
+    <title>Browse Cleaners - Black&Yellow Cleaning</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <style>
-        /* Additional styles for 2x2 grid layout */
-        .cleaner-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: var(--spacing-lg);
-            margin-top: var(--spacing-xl);
-        }
-        
-        .cleaner-card {
-            position: relative;
-            background-color: var(--bg-light);
-            border-radius: var(--border-radius-md);
-            border: 1px solid var(--border-color);
-            transition: transform var(--transition-normal), box-shadow var(--transition-normal);
-        }
-        
-        .cleaner-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-md);
-        }
-        
-        .card-header {
-            padding: var(--spacing-sm) var(--spacing-md);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            background-color: rgba(255, 215, 0, 0.05);
-        }
-        
-        .card-body {
-            padding: var(--spacing-md);
-            display: flex;
-            gap: var(--spacing-md);
-        }
-        
-        .cleaner-image {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: var(--border-radius-sm);
-            border: 2px solid var(--primary);
-        }
-        
-        .view-profile-btn {
-            display: inline-block;
-            padding: 8px 15px;
-            background-color: #FFD700;
-            color: #333;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            margin-top: 10px;
-            text-align: center;
-        }
-        
-        .view-profile-btn:hover {
-            background-color: #FFC800;
-            transform: translateY(-2px);
-        }
-        
-        @media (max-width: 768px) {
-            .cleaner-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
 </head>
 <body>
 
@@ -146,7 +73,7 @@ $shortlistedIds = $controller->getShortlistedCleanerIds($homeownerId);
         
         <button type="submit">Search</button>
         <?php if(!empty($search) || !empty($category) || $sortBy !== 'name'): ?>
-            <a href="ViewCleanerListings.php" class="clear-btn">Clear Filters</a>
+            <a href="BrowseCleaners.php" class="clear-btn">Clear Filters</a>
         <?php endif; ?>
     </form>
     
@@ -160,12 +87,12 @@ $shortlistedIds = $controller->getShortlistedCleanerIds($homeownerId);
             <?php foreach($cleaners as $cleaner): ?>
                 <div class="cleaner-card">
                     <div class="card-header">
-                        <h3 class="cleaner-name"><?= htmlspecialchars($cleaner->getName()) ?></h3>
+                        <h3 class="cleaner-name"><?= htmlspecialchars($cleaner['username']) ?></h3>
                     </div>
                     <div class="card-body">
                         <div>
                             <img src="../../assets/images/cleaners/default.jpg" 
-                                 alt="<?= htmlspecialchars($cleaner->getName()) ?>" 
+                                 alt="<?= htmlspecialchars($cleaner['username']) ?>" 
                                  class="cleaner-image">
                         </div>
                         <div style="flex: 1;">
@@ -173,11 +100,11 @@ $shortlistedIds = $controller->getShortlistedCleanerIds($homeownerId);
                                 <h4>Services Offered:</h4>
                                 <div class="cleaner-services">
                                     <?php 
-                                    $services = $cleaner->getServices();
+                                    $services = $cleaner['services'];
                                     $displayCount = min(count($services), 3);
                                     for($i = 0; $i < $displayCount; $i++): 
                                     ?>
-                                        <span class="service-tag"><?= htmlspecialchars($services[$i]->getTitle()); ?></span>
+                                        <span class="service-tag"><?= htmlspecialchars($services[$i]['title']); ?></span>
                                     <?php endfor; ?>
                                     
                                     <?php if(count($services) > 3): ?>
@@ -186,8 +113,8 @@ $shortlistedIds = $controller->getShortlistedCleanerIds($homeownerId);
                                 </div>
                             </div>
                             
-                            <!-- "View Profile" link styled as a button instead of shortlist button -->
-                            <a href="ViewCleanerProfile.php?id=<?= $cleaner->getId(); ?>" class="view-profile-btn" style="width: 100%; margin-top: 15px;">
+                            <!-- View Profile button -->
+                            <a href="CleanerProfile.php?id=<?= $cleaner['userid']; ?>" class="view-profile-btn" style="width: 100%; margin-top: 15px;">
                                 View Full Profile
                             </a>
                         </div>
@@ -197,5 +124,6 @@ $shortlistedIds = $controller->getShortlistedCleanerIds($homeownerId);
         <?php endif; ?>
     </div>
 </div>
+
 </body>
 </html>

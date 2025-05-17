@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: Boundary/cleaner/cleanerDashboard.php");
                 break;
             case 'Homeowner':
-                header("Location: Boundary/homeowner/homeownerDashboard.php");
+                header("Location: Boundary/homeowner/HomeownerDashboard.php");
                 break;
             case 'Manager':
                 header("Location: Boundary/platformManager/managerDashboard.php");

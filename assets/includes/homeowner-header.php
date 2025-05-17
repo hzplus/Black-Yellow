@@ -5,7 +5,7 @@
     <span class="logo-text">Homeowner Portal</span>
   </div>
   <div class="search-container">
-    <form action="CleanerListings.php" method="GET" class="search-form">
+    <form action="BrowseCleaners.php" method="GET" class="search-form">
       <input type="text" name="search" placeholder="Find cleaners..." value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
       <button type="submit">Search</button>
     </form>
@@ -18,8 +18,8 @@
 
 <div class="navbar">
   <a href="HomeownerDashboard.php" <?= basename($_SERVER['PHP_SELF']) == 'HomeownerDashboard.php' ? 'class="active"' : '' ?>>Dashboard</a>
-  <a href="ViewCleanerListings.php" <?= basename($_SERVER['PHP_SELF']) == 'ViewCleanerListings.php' || basename($_SERVER['PHP_SELF']) == 'CleanerListings.php' ? 'class="active"' : '' ?>>Find Cleaners</a>
-  <a href="ViewShortlistedCleaners.php" <?= basename($_SERVER['PHP_SELF']) == 'ViewShortlistedCleaners.php' || basename($_SERVER['PHP_SELF']) == 'ShortlistedCleaners.php' ? 'class="active"' : '' ?>>Shortlisted</a>
-  <a href="ViewServiceHistory.php" <?= basename($_SERVER['PHP_SELF']) == 'ViewServiceHistory.php' || basename($_SERVER['PHP_SELF']) == 'ServiceHistory.php' ? 'class="active"' : '' ?>>History</a>
-  <a href="ViewMyAccount.php" <?= basename($_SERVER['PHP_SELF']) == 'ViewMyAccount.php' || basename($_SERVER['PHP_SELF']) == 'MyAccount.php' ? 'class="active"' : '' ?>>My Account</a>
+  <a href="BrowseCleaners.php" <?= basename($_SERVER['PHP_SELF']) == 'BrowseCleaners.php' || basename($_SERVER['PHP_SELF']) == 'CleanerListings.php' ? 'class="active"' : '' ?>>Find Cleaners</a>
+  <a href="ShortlistedCleaners.php" <?= basename($_SERVER['PHP_SELF']) == 'ShortlistedCleaners.php' || basename($_SERVER['PHP_SELF']) == 'ShortlistedCleaners.php' ? 'class="active"' : '' ?>>Shortlisted</a>
+  <a href="ServiceHistory.php" <?= basename($_SERVER['PHP_SELF']) == 'ServiceHistory.php' || basename($_SERVER['PHP_SELF']) == 'ServiceHistory.php' ? 'class="active"' : '' ?>>History</a>
+  <a href="MyAccount.php" <?= basename($_SERVER['PHP_SELF']) == 'MyAccount.php' || basename($_SERVER['PHP_SELF']) == 'MyAccount.php' ? 'class="active"' : '' ?>>My Account</a>
 </div>
