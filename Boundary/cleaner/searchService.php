@@ -12,7 +12,7 @@ $keyword = $_GET['keyword'] ?? '';
 $services = [];
 
 if (!empty($keyword)) {
-    $services = SearchServiceController::search($cleanerId, $keyword);
+    $services = SearchServiceController::searchServicesByTitle($cleanerId, $keyword);
 }
 ?>
 
@@ -33,6 +33,8 @@ if (!empty($keyword)) {
     <form method="GET" action="searchService.php">
         <input type="text" name="keyword" placeholder="Search by title or category..." value="<?= htmlspecialchars($keyword) ?>" required>
         <button type="submit">Search</button>
+        <a href="searchService.php" class="button" style="margin-left: 10px;">Clear</a>
+
     </form>
 
     <div class="service-cards">

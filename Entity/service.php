@@ -30,7 +30,7 @@ class CleanerService {
         return $services;
     }
 
-    function createService($cleanerId, $title, $description, $price, $availability, $category, $image_path) {
+    public static function createService($cleanerId, $title, $description, $price, $availability, $category, $image_path) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("INSERT INTO services (cleanerid, title, description, price, availability, category, image_path) VALUES (?, ?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("issdsss", $cleanerId, $title, $description, $price, $availability, $category, $image_path);
@@ -55,7 +55,7 @@ class CleanerService {
     
     
 
-    function searchServicesByTitle($cleanerid, $keyword) {
+    public static function searchServicesByTitle($cleanerid, $keyword) {
         $conn = Database::getConnection();
         $keyword = "%" . $keyword . "%";
         $stmt = $conn->prepare("SELECT * FROM services WHERE cleanerid = ? AND (title LIKE ? OR category LIKE ?)");
@@ -67,16 +67,6 @@ class CleanerService {
         return $services;
     }
 
-    // function getServiceById($serviceid) {
-    //     $conn = Database::getConnection();
-    //     $stmt = $conn->prepare("SELECT * FROM services WHERE serviceid = ?");
-    //     $stmt->bind_param("i", $serviceid);
-    //     $stmt->execute();
-    //     $result = $stmt->get_result();
-    //     $service = $result->fetch_assoc();
-    //     $stmt->close();
-    //     return $service;
-    // }
     public static function getServiceById($serviceid) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("SELECT * FROM services WHERE serviceid = ?");
@@ -98,13 +88,35 @@ class CleanerService {
         return $success;
     }
     
-    function deleteService($serviceid) {
+    public static function deleteService($serviceid) {
         $conn = Database::getConnection();
         $stmt = $conn->prepare("DELETE FROM services WHERE serviceid = ?");
         $stmt->bind_param("i", $serviceid);
         $success = $stmt->execute();
         $stmt->close();
         return $success;
+    }
+
+    public static function getServiceViews($serviceId) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("SELECT view_count FROM services WHERE serviceid = ?");
+        $stmt->bind_param("i", $serviceId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        $stmt->close();
+        return $row ? $row['view_count'] : 0;
+    }
+    
+    public function getServiceShortlists($serviceid) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("SELECT shortlist_count FROM services WHERE serviceid = ?");
+        $stmt->bind_param("i", $serviceid);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+        $stmt->close();
+        return $data ? $data['shortlist_count'] : 0;
     }
     
 }
