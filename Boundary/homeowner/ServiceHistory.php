@@ -20,19 +20,8 @@ $startDate = $_GET['start_date'] ?? '';
 $endDate = $_GET['end_date'] ?? '';
 $cleanerName = $_GET['cleaner_name'] ?? '';
 $category = $_GET['category'] ?? '';
-$showPending = isset($_GET['show_pending']) && $_GET['show_pending'] == '1';
-
-// Handle booking cancellation
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_booking'])) {
-    $bookingId = $_POST['booking_id'];
-    $success = $controller->cancelBooking($bookingId, $homeownerId);
-    
-    if ($success) {
-        $cancelSuccess = true;
-    } else {
-        $cancelError = "Failed to cancel booking. Please try again.";
-    }
-}
+$viewType = $_GET['view'] ?? 'history'; // 'history' or 'cleaners'
+$selectedCleanerId = $_GET['cleaner_id'] ?? 0;
 
 // Get service history
 $serviceHistory = $controller->getServiceHistory(
@@ -43,11 +32,20 @@ $serviceHistory = $controller->getServiceHistory(
     $category
 );
 
-// Get pending bookings if requested
-if ($showPending) {
-    $pendingBookings = $controller->getPendingBookings($homeownerId);
-} else {
-    $pendingBookings = [];
+// Get all previous cleaners
+$previousCleaners = $controller->getPreviousCleaners($homeownerId);
+
+// Get specific cleaner's services if a cleaner is selected
+$cleanerServices = [];
+if ($selectedCleanerId > 0) {
+    $cleanerServices = $controller->getServicesFromCleaner($homeownerId, $selectedCleanerId);
+    // Get cleaner name for display
+    foreach ($previousCleaners as $cleaner) {
+        if ($cleaner['userid'] == $selectedCleanerId) {
+            $selectedCleanerName = $cleaner['username'];
+            break;
+        }
+    }
 }
 
 // Get all categories for filter dropdown
@@ -97,27 +95,6 @@ $categories = $controller->getAllCategories();
             border-bottom: 1px solid var(--border-color);
         }
         
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .alert.success {
-            background-color: rgba(76, 175, 80, 0.1);
-            border: 1px solid var(--success);
-            color: var(--success);
-        }
-        
-        .alert.error {
-            background-color: rgba(244, 67, 54, 0.1);
-            border: 1px solid var(--error);
-            color: var(--error);
-        }
-        
         .filter-row {
             background-color: var(--bg-light);
             padding: 20px;
@@ -156,20 +133,6 @@ $categories = $controller->getAllCategories();
             transform: translateY(-3px);
         }
         
-        .filter-row label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-light);
-            margin-bottom: 0;
-        }
-        
-        .filter-row input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--primary);
-        }
-        
         .clear-btn {
             padding: 12px 20px;
             background-color: transparent;
@@ -188,128 +151,28 @@ $categories = $controller->getAllCategories();
             background-color: rgba(255, 215, 0, 0.1);
         }
         
-        /* Booking Cards for Pending Bookings */
-        .pending-bookings {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+        .view-tabs {
+            display: flex;
             margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
         }
         
-        .booking-card {
-            background-color: var(--bg-light);
-            border-radius: 12px;
-            border: 1px solid var(--primary);
-            padding: 20px;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .booking-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .booking-card::before {
-            content: 'PENDING';
-            position: absolute;
-            top: 10px;
-            right: -30px;
-            background-color: var(--primary);
-            color: var(--bg-darker);
-            font-size: 0.7rem;
-            font-weight: bold;
-            padding: 5px 30px;
-            transform: rotate(45deg);
-        }
-        
-        .booking-date {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            color: var(--primary);
-            font-weight: bold;
-        }
-        
-        .booking-details h3 {
-            color: var(--text-light);
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-        }
-        
-        .cleaner-name, 
-        .service-category, 
-        .service-notes {
-            margin-bottom: 8px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-        
-        .booking-price {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--primary);
-            margin: 15px 0;
-        }
-        
-        .booking-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: auto;
-        }
-        
-        .cancel-btn {
-            flex: 1;
-            padding: 10px 0;
-            background-color: transparent;
-            color: var(--error);
-            border: 1px solid var(--error);
-            border-radius: 5px;
+        .view-tab {
+            padding: 12px 25px;
             font-weight: 600;
             cursor: pointer;
+            color: var(--text-muted);
+            border-bottom: 3px solid transparent;
             transition: all 0.3s ease;
         }
         
-        .cancel-btn:hover {
-            background-color: rgba(244, 67, 54, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .view-profile-btn,
-        .view-service-btn {
-            flex: 1;
-            padding: 10px 0;
-            text-align: center;
-            border-radius: 5px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-        }
-        
-        .view-profile-btn {
-            background-color: transparent;
+        .view-tab.active {
             color: var(--primary);
-            border: 1px solid var(--primary);
+            border-bottom-color: var(--primary);
         }
         
-        .view-profile-btn:hover {
-            background-color: rgba(255, 215, 0, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .view-service-btn {
-            background-color: var(--primary);
-            color: var(--bg-darker);
-            border: none;
-        }
-        
-        .view-service-btn:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-2px);
+        .view-tab:hover {
+            color: var(--primary);
         }
         
         /* History Cards */
@@ -362,8 +225,111 @@ $categories = $controller->getAllCategories();
             margin-top: auto;
         }
         
+        /* Cleaner Cards */
+        .cleaners-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .cleaner-card {
+            background-color: var(--bg-light);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .cleaner-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .cleaner-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            background-color: var(--bg-darker);
+            border: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--primary);
+            overflow: hidden;
+        }
+        
+        .cleaner-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .cleaner-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        
+        .cleaner-count {
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+        
+        .cleaner-actions {
+            margin-top: auto;
+        }
+        
+        /* Cleaner Services List */
+        .cleaner-services-list {
+            margin-top: 20px;
+        }
+        
+        .service-item {
+            background-color: var(--bg-light);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .service-item:hover {
+            border-color: var(--primary);
+            background-color: rgba(255, 215, 0, 0.05);
+        }
+        
+        .service-info {
+            flex: 1;
+        }
+        
+        .service-title {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .service-details {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        .service-price {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+        
         .no-results {
-            grid-column: span 2;
+            grid-column: span 3;
             text-align: center;
             padding: 40px;
             background-color: var(--bg-light);
@@ -374,16 +340,27 @@ $categories = $controller->getAllCategories();
         
         /* Responsive adjustments */
         @media (max-width: 992px) {
-            .pending-bookings,
             .history-container {
                 grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .cleaners-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .no-results {
+                grid-column: span 2;
             }
         }
         
         @media (max-width: 768px) {
-            .pending-bookings,
-            .history-container {
+            .history-container,
+            .cleaners-container {
                 grid-template-columns: 1fr;
+            }
+            
+            .no-results {
+                grid-column: span 1;
             }
             
             .filter-row {
@@ -391,9 +368,24 @@ $categories = $controller->getAllCategories();
                 align-items: stretch;
             }
             
-            .booking-actions,
             .history-actions {
                 flex-direction: column;
+            }
+            
+            .view-tabs {
+                flex-direction: column;
+                border-bottom: none;
+            }
+            
+            .view-tab {
+                border-bottom: none;
+                border-left: 3px solid transparent;
+            }
+            
+            .view-tab.active {
+                border-bottom: none;
+                border-left-color: var(--primary);
+                background-color: rgba(255, 215, 0, 0.05);
             }
         }
     </style>
@@ -408,151 +400,196 @@ $categories = $controller->getAllCategories();
     
     <h1 class="section-title">Service History</h1>
     
-    <?php if (isset($cancelSuccess)): ?>
-        <div class="alert success">
-            <i class="fas fa-check-circle"></i>
-            <strong>Success:</strong> Your booking has been canceled.
-        </div>
-    <?php endif; ?>
-    
-    <?php if (isset($cancelError)): ?>
-        <div class="alert error">
-            <i class="fas fa-exclamation-circle"></i>
-            <strong>Error:</strong> <?= $cancelError; ?>
-        </div>
-    <?php endif; ?>
-    
-    <!-- Filter Form -->
-    <form method="GET" action="" class="filter-row">
-        <div class="filter-group">
-            <label for="start_date">From:</label>
-            <input type="date" id="start_date" name="start_date" value="<?= htmlspecialchars($startDate); ?>">
-        </div>
-        
-        <div class="filter-group">
-            <label for="end_date">To:</label>
-            <input type="date" id="end_date" name="end_date" value="<?= htmlspecialchars($endDate); ?>">
-        </div>
-        
-        <div class="filter-group">
-            <label for="cleaner_name">Cleaner:</label>
-            <input type="text" id="cleaner_name" name="cleaner_name" placeholder="Cleaner name..." value="<?= htmlspecialchars($cleanerName); ?>">
-        </div>
-        
-        <div class="filter-group">
-            <label for="category">Category:</label>
-            <select id="category" name="category">
-                <option value="">All Categories</option>
-                <?php foreach($categories as $cat): ?>
-                    <option value="<?= htmlspecialchars($cat); ?>" <?= ($category === $cat) ? 'selected' : ''; ?>>
-                        <?= htmlspecialchars($cat); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        
-        <div class="filter-group">
-            <label for="show_pending">
-                <input type="checkbox" id="show_pending" name="show_pending" value="1" <?= $showPending ? 'checked' : ''; ?>>
-                Show Pending Bookings
-            </label>
-        </div>
-        
-        <button type="submit">Filter</button>
-        <a href="ServiceHistory.php" class="clear-btn">Clear Filters</a>
-    </form>
-    
-    <!-- Pending Bookings Section (if requested) -->
-    <?php if ($showPending && !empty($pendingBookings)): ?>
-        <h2 class="sub-title">Pending Bookings</h2>
-        <div class="pending-bookings">
-            <?php foreach($pendingBookings as $booking): ?>
-                <div class="booking-card">
-                    <div class="booking-date">
-                        <i class="fas fa-calendar"></i>
-                        <?= htmlspecialchars($booking['formatted_date']); ?>
-                    </div>
-                    
-                    <div class="booking-details">
-                        <h3><?= htmlspecialchars($booking['title']); ?></h3>
-                        <p class="cleaner-name">
-                            Cleaner: <?= htmlspecialchars($booking['cleaner_name']); ?>
-                        </p>
-                        <p class="service-category">
-                            Category: <?= htmlspecialchars($booking['category']); ?>
-                        </p>
-                        <?php if($booking['notes']): ?>
-                            <p class="service-notes">Notes: <?= htmlspecialchars($booking['notes']); ?></p>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <div class="booking-price">
-                        <?= htmlspecialchars($booking['formatted_price']); ?>
-                    </div>
-                    
-                    <div class="booking-actions">
-                        <form method="POST" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
-                            <input type="hidden" name="booking_id" value="<?= $booking['bookingid']; ?>">
-                            <button type="submit" name="cancel_booking" class="cancel-btn">
-                                Cancel Booking
-                            </button>
-                        </form>
-                        
-                        <a href="CleanerProfile.php?id=<?= $booking['cleanerid']; ?>" class="view-profile-btn">
-                            View Cleaner
-                        </a>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
-    
-    <!-- Completed Service History -->
-    <h2 class="sub-title">Completed Services</h2>
-    
-    <!-- History Listings -->
-    <div class="history-container">
-        <?php if(empty($serviceHistory)): ?>
-            <div class="no-results">
-                <p>No service history found matching your criteria.</p>
-            </div>
-        <?php else: ?>
-            <?php foreach($serviceHistory as $service): ?>
-                <div class="history-card">
-                    <div class="history-date">
-                        <?= htmlspecialchars($service['formatted_date']); ?>
-                    </div>
-                    
-                    <div class="history-details">
-                        <h3><?= htmlspecialchars($service['service_title']); ?></h3>
-                        <p class="cleaner-name">
-                            Cleaner: <?= htmlspecialchars($service['cleaner_name']); ?>
-                        </p>
-                        <p class="service-category">
-                            Category: <?= htmlspecialchars($service['category']); ?>
-                        </p>
-                        <?php if($service['notes']): ?>
-                            <p class="service-notes">Notes: <?= htmlspecialchars($service['notes']); ?></p>
-                        <?php endif; ?>
-                    </div>
-                    
-                    <div class="history-price">
-                        <?= htmlspecialchars($service['formatted_price']); ?>
-                    </div>
-                    
-                    <div class="history-actions">
-                        <a href="CleanerProfile.php?id=<?= $service['cleanerid']; ?>" class="view-profile-btn">
-                            View Cleaner
-                        </a>
-                        <a href="ServiceDetails.php?id=<?= $service['serviceid']; ?>" class="view-service-btn">
-                            View Service
-                        </a>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+    <!-- View Tabs -->
+    <div class="view-tabs">
+        <a href="?view=history" class="view-tab <?= $viewType === 'history' ? 'active' : '' ?>">
+            <i class="fas fa-history"></i> Service History
+        </a>
+        <a href="?view=cleaners" class="view-tab <?= $viewType === 'cleaners' ? 'active' : '' ?>">
+            <i class="fas fa-user-friends"></i> Previous Cleaners
+        </a>
     </div>
+    
+    <?php if ($viewType === 'history'): ?>
+        <!-- Filter Form for History View -->
+        <form method="GET" action="" class="filter-row">
+            <input type="hidden" name="view" value="history">
+            
+            <div>
+                <label for="start_date">From:</label>
+                <input type="date" id="start_date" name="start_date" value="<?= htmlspecialchars($startDate); ?>">
+            </div>
+            
+            <div>
+                <label for="end_date">To:</label>
+                <input type="date" id="end_date" name="end_date" value="<?= htmlspecialchars($endDate); ?>">
+            </div>
+            
+            <div>
+                <label for="cleaner_name">Cleaner:</label>
+                <input type="text" id="cleaner_name" name="cleaner_name" placeholder="Cleaner name..." value="<?= htmlspecialchars($cleanerName); ?>">
+            </div>
+            
+            <div>
+                <label for="category">Category:</label>
+                <select id="category" name="category">
+                    <option value="">All Categories</option>
+                    <?php foreach($categories as $cat): ?>
+                        <option value="<?= htmlspecialchars($cat); ?>" <?= ($category === $cat) ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($cat); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <button type="submit">Search</button>
+            <a href="ServiceHistory.php?view=history" class="clear-btn">Clear Filters</a>
+        </form>
+        
+        <!-- History Listings -->
+        <div class="history-container">
+            <?php if(empty($serviceHistory)): ?>
+                <div class="no-results">
+                    <p>No service history found matching your criteria.</p>
+                </div>
+            <?php else: ?>
+                <?php foreach($serviceHistory as $service): ?>
+                    <div class="history-card">
+                        <div class="history-date">
+                            <?= htmlspecialchars($service['formatted_date']); ?>
+                        </div>
+                        
+                        <div class="history-details">
+                            <h3><?= htmlspecialchars($service['service_title']); ?></h3>
+                            <p>
+                                <strong>Cleaner:</strong> 
+                                <?= htmlspecialchars($service['cleaner_name']); ?>
+                            </p>
+                            <p>
+                                <strong>Category:</strong> 
+                                <?= htmlspecialchars($service['category']); ?>
+                            </p>
+                        </div>
+                        
+                        <div class="history-price">
+                            <?= htmlspecialchars($service['formatted_price']); ?>
+                        </div>
+                        
+                        <div class="history-actions">
+                            <a href="CleanerProfile.php?id=<?= $service['cleanerid']; ?>" class="btn btn-outline">
+                                View Cleaner Profile
+                            </a>
+                            <a href="ServiceDetails.php?id=<?= $service['serviceid']; ?>" class="btn">
+                                View Service Details
+                            </a>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+        
+    <?php elseif ($viewType === 'cleaners'): ?>
+        <?php if ($selectedCleanerId > 0): ?>
+            <!-- Cleaner's Services View -->
+            <div class="back-button" onclick="window.history.back()">← Back to Cleaners List</div>
+            
+            <h2 class="sub-title">Services by <?= htmlspecialchars($selectedCleanerName ?? ''); ?></h2>
+            
+            <div class="cleaner-services-list">
+                <?php if (empty($cleanerServices)): ?>
+                    <div class="no-results">
+                        <p>No services found for this cleaner.</p>
+                    </div>
+                <?php else: ?>
+                    <?php foreach($cleanerServices as $service): ?>
+                        <div class="service-item">
+                            <div class="service-info">
+                                <div class="service-title"><?= htmlspecialchars($service['title']); ?></div>
+                                <div class="service-details">
+                                    <?= htmlspecialchars($service['formatted_date']); ?> • 
+                                    <?= htmlspecialchars($service['category']); ?>
+                                </div>
+                            </div>
+                            <div class="service-price">
+                                <?= htmlspecialchars($service['formatted_price']); ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                    
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="CleanerProfile.php?id=<?= $selectedCleanerId; ?>" class="btn">
+                            View Cleaner's Profile
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
+            
+        <?php else: ?>
+            <!-- Previous Cleaners View -->
+            <form method="GET" action="" class="filter-row">
+                <input type="hidden" name="view" value="cleaners">
+                
+                <div>
+                    <label for="cleaner_search">Search Cleaners:</label>
+                    <input type="text" id="cleaner_search" name="cleaner_name" placeholder="Cleaner name..." value="<?= htmlspecialchars($cleanerName); ?>">
+                </div>
+                
+                <button type="submit">Search</button>
+                <a href="ServiceHistory.php?view=cleaners" class="clear-btn">Clear Search</a>
+            </form>
+            
+            <div class="cleaners-container">
+                <?php if(empty($previousCleaners)): ?>
+                    <div class="no-results">
+                        <p>You haven't worked with any cleaners yet.</p>
+                    </div>
+                <?php else: ?>
+                    <?php 
+                    $filteredCleaners = $previousCleaners;
+                    if (!empty($cleanerName)) {
+                        $filteredCleaners = array_filter($previousCleaners, function($cleaner) use ($cleanerName) {
+                            return stripos($cleaner['username'], $cleanerName) !== false;
+                        });
+                    }
+                    
+                    if(empty($filteredCleaners)): 
+                    ?>
+                        <div class="no-results">
+                            <p>No cleaners found matching your search.</p>
+                        </div>
+                    <?php else: ?>
+                        <?php foreach($filteredCleaners as $cleaner): ?>
+                            <div class="cleaner-card">
+                                <div class="cleaner-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="cleaner-name"><?= htmlspecialchars($cleaner['username']); ?></div>
+                                <div class="cleaner-count">
+                                    <?= $cleaner['service_count']; ?> service<?= $cleaner['service_count'] > 1 ? 's' : ''; ?> completed
+                                </div>
+                                <div class="cleaner-actions">
+                                    <a href="?view=cleaners&cleaner_id=<?= $cleaner['userid']; ?>" class="btn btn-outline">
+                                        View Service History
+                                    </a>
+                                    <a href="CleanerProfile.php?id=<?= $cleaner['userid']; ?>" class="btn" style="margin-top: 10px;">
+                                        View Profile
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
 </div>
+
+<script>
+    // Add any necessary JavaScript here
+    document.addEventListener('DOMContentLoaded', function() {
+        // You could add functionality like date range validation, etc.
+    });
+</script>
 
 </body>
 </html>

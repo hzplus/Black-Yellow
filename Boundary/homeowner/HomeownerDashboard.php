@@ -120,12 +120,6 @@ if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Homeowner') {
             <h3>Service History</h3>
             <p>Review past service bookings and feedback.</p>
         </a>
-        
-        <a href="MyAccount.php" class="option-card">
-            <div class="icon"><i class="fas fa-user-cog"></i></div>
-            <h3>My Account</h3>
-            <p>View and update your account information.</p>
-        </a>
     </div>
 </div>
 

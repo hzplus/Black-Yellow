@@ -21,5 +21,4 @@
   <a href="BrowseCleaners.php" <?= basename($_SERVER['PHP_SELF']) == 'BrowseCleaners.php' || basename($_SERVER['PHP_SELF']) == 'CleanerListings.php' ? 'class="active"' : '' ?>>Find Cleaners</a>
   <a href="ShortlistedCleaners.php" <?= basename($_SERVER['PHP_SELF']) == 'ShortlistedCleaners.php' || basename($_SERVER['PHP_SELF']) == 'ShortlistedCleaners.php' ? 'class="active"' : '' ?>>Shortlisted</a>
   <a href="ServiceHistory.php" <?= basename($_SERVER['PHP_SELF']) == 'ServiceHistory.php' || basename($_SERVER['PHP_SELF']) == 'ServiceHistory.php' ? 'class="active"' : '' ?>>History</a>
-  <a href="MyAccount.php" <?= basename($_SERVER['PHP_SELF']) == 'MyAccount.php' || basename($_SERVER['PHP_SELF']) == 'MyAccount.php' ? 'class="active"' : '' ?>>My Account</a>
 </div>

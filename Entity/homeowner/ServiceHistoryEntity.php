@@ -23,25 +23,25 @@ class ServiceHistoryEntity {
         try {
             $conn = Database::getConnection();
             
-            $sql = "SELECT b.bookingid, b.homeownerid, b.cleanerid, b.serviceid, b.booking_date as service_date, 
-                          b.notes, s.title as service_title, s.price, s.category, u.username as cleaner_name
-                   FROM bookings b
-                   JOIN services s ON b.serviceid = s.serviceid
-                   JOIN users u ON b.cleanerid = u.userid
-                   WHERE b.homeownerid = ? AND b.status = 'completed'";
+            $sql = "SELECT cm.matchid, cm.homeownerid, cm.cleanerid, cm.serviceid, cm.booking_date as service_date, 
+                          cm.confirmed_at, s.title as service_title, s.price, s.category, u.username as cleaner_name
+                   FROM confirmed_matches cm
+                   JOIN services s ON cm.serviceid = s.serviceid
+                   JOIN users u ON cm.cleanerid = u.userid
+                   WHERE cm.homeownerid = ?";
             
             $params = [$homeownerId];
             $types = "i";
             
             if (!empty($startDate)) {
-                $sql .= " AND b.booking_date >= ?";
+                $sql .= " AND cm.booking_date >= ?";
                 $params[] = $startDate;
                 $types .= "s";
             }
             
             if (!empty($endDate)) {
-                $sql .= " AND b.booking_date <= ?";
-                $params[] = $endDate . " 23:59:59"; // End of day
+                $sql .= " AND cm.booking_date <= ?";
+                $params[] = $endDate;
                 $types .= "s";
             }
             
@@ -57,7 +57,7 @@ class ServiceHistoryEntity {
                 $types .= "s";
             }
             
-            $sql .= " ORDER BY b.booking_date DESC";
+            $sql .= " ORDER BY cm.booking_date DESC";
             
             $stmt = $conn->prepare($sql);
             
@@ -108,77 +108,74 @@ class ServiceHistoryEntity {
     }
     
     /**
-     * Get pending bookings for a homeowner
+     * Get all cleaners the homeowner has worked with
      * 
      * @param int $homeownerId Homeowner ID
-     * @return array Array of pending booking records
+     * @return array Array of cleaners
      */
-    public function getPendingBookings(int $homeownerId): array {
+    public function getPreviousCleaners(int $homeownerId): array {
         try {
             $conn = Database::getConnection();
             
-            $sql = "SELECT b.bookingid, b.cleanerid, b.serviceid, b.booking_date, b.notes,
-                          s.title, s.price, s.category, u.username as cleaner_name
-                   FROM bookings b
-                   JOIN services s ON b.serviceid = s.serviceid
-                   JOIN users u ON b.cleanerid = u.userid
-                   WHERE b.homeownerid = ? AND b.status = 'pending'
-                   ORDER BY b.booking_date ASC";
+            $sql = "SELECT DISTINCT u.userid, u.username, COUNT(cm.matchid) as service_count
+                    FROM users u
+                    JOIN confirmed_matches cm ON u.userid = cm.cleanerid
+                    WHERE cm.homeownerid = ?
+                    GROUP BY u.userid, u.username
+                    ORDER BY service_count DESC";
             
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("i", $homeownerId);
             $stmt->execute();
             $result = $stmt->get_result();
             
-            $pendingBookings = [];
+            $cleaners = [];
             while ($row = $result->fetch_assoc()) {
-                $pendingBookings[] = $row;
+                $cleaners[] = $row;
             }
             
             $stmt->close();
-            return $pendingBookings;
+            return $cleaners;
             
         } catch (\Exception $e) {
-            error_log("Error getting pending bookings: " . $e->getMessage());
+            error_log("Error getting previous cleaners: " . $e->getMessage());
             return [];
         }
     }
     
     /**
-     * Cancel a booking
+     * Get all services a homeowner has received from a specific cleaner
      * 
-     * @param int $bookingId Booking ID to cancel
-     * @param int $homeownerId Homeowner ID for verification
-     * @return bool Success status
+     * @param int $homeownerId Homeowner ID
+     * @param int $cleanerId Cleaner ID
+     * @return array Array of services
      */
-    public function cancelBooking(int $bookingId, int $homeownerId): bool {
+    public function getServicesFromCleaner(int $homeownerId, int $cleanerId): array {
         try {
             $conn = Database::getConnection();
             
-            // Verify booking belongs to this homeowner
-            $checkSql = "SELECT bookingid FROM bookings WHERE bookingid = ? AND homeownerid = ?";
-            $checkStmt = $conn->prepare($checkSql);
-            $checkStmt->bind_param("ii", $bookingId, $homeownerId);
-            $checkStmt->execute();
-            $result = $checkStmt->get_result();
-            $checkStmt->close();
+            $sql = "SELECT cm.matchid, cm.booking_date, s.title, s.category, s.price
+                    FROM confirmed_matches cm
+                    JOIN services s ON cm.serviceid = s.serviceid
+                    WHERE cm.homeownerid = ? AND cm.cleanerid = ?
+                    ORDER BY cm.booking_date DESC";
             
-            if ($result->num_rows === 0) {
-                return false; // Booking not found or doesn't belong to this homeowner
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ii", $homeownerId, $cleanerId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $services = [];
+            while ($row = $result->fetch_assoc()) {
+                $services[] = $row;
             }
             
-            // Update booking status to canceled
-            $updateSql = "UPDATE bookings SET status = 'canceled' WHERE bookingid = ?";
-            $updateStmt = $conn->prepare($updateSql);
-            $updateStmt->bind_param("i", $bookingId);
-            $success = $updateStmt->execute();
-            $updateStmt->close();
-            
-            return $success;
+            $stmt->close();
+            return $services;
             
         } catch (\Exception $e) {
-            error_log("Error canceling booking: " . $e->getMessage());
-            return false;
+            error_log("Error getting services from cleaner: " . $e->getMessage());
+            return [];
         }
     }
 }

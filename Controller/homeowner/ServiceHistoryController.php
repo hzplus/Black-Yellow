@@ -63,41 +63,41 @@ class ServiceHistoryController {
     }
     
     /**
-     * Get pending bookings for a homeowner
+     * Get all cleaners the homeowner has worked with
      * 
      * @param int $homeownerId Homeowner ID
-     * @return array Array of pending booking records
+     * @return array Array of cleaners
      */
-    public function getPendingBookings(int $homeownerId): array {
+    public function getPreviousCleaners(int $homeownerId): array {
         try {
-            $bookings = $this->entity->getPendingBookings($homeownerId);
-            
-            // Enhance data with formatted values
-            foreach ($bookings as &$booking) {
-                $booking['formatted_date'] = date('F j, Y', strtotime($booking['booking_date']));
-                $booking['formatted_price'] = '$' . number_format($booking['price'], 2);
-            }
-            
-            return $bookings;
+            return $this->entity->getPreviousCleaners($homeownerId);
         } catch (Exception $e) {
-            error_log("Error getting pending bookings: " . $e->getMessage());
+            error_log("Error getting previous cleaners: " . $e->getMessage());
             return [];
         }
     }
     
     /**
-     * Cancel a booking
+     * Get all services a homeowner has received from a specific cleaner
      * 
-     * @param int $bookingId Booking ID to cancel
-     * @param int $homeownerId Homeowner ID for verification
-     * @return bool Success status
+     * @param int $homeownerId Homeowner ID
+     * @param int $cleanerId Cleaner ID
+     * @return array Array of services
      */
-    public function cancelBooking(int $bookingId, int $homeownerId): bool {
+    public function getServicesFromCleaner(int $homeownerId, int $cleanerId): array {
         try {
-            return $this->entity->cancelBooking($bookingId, $homeownerId);
+            $services = $this->entity->getServicesFromCleaner($homeownerId, $cleanerId);
+            
+            // Enhance data with formatted values
+            foreach ($services as &$service) {
+                $service['formatted_date'] = date('F j, Y', strtotime($service['booking_date']));
+                $service['formatted_price'] = '$' . number_format($service['price'], 2);
+            }
+            
+            return $services;
         } catch (Exception $e) {
-            error_log("Error canceling booking: " . $e->getMessage());
-            return false;
+            error_log("Error getting services from cleaner: " . $e->getMessage());
+            return [];
         }
     }
     
