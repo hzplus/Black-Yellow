@@ -15,33 +15,19 @@ $users = $controller->search(""); // Fetch all users
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Search Users</title>
+    <title>Search User Accounts</title>
     <link rel="stylesheet" href="../../assets/css/style.css">
 </head>
 <body>
 
-<!-- Topbar -->
-<div class="topbar">
-    Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!
-    <a href="../../logout.php" class="logout-link">Logout</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/admin-header.php'; ?>
 
-<!-- Logo -->
-<div class="logo">
-    <img src="../../assets/images/logo.jpg" alt="Logo">
-</div>
-
-<!-- Navbar -->
-<div class="navbar">
-    <a href="adminDashboard.php">Home</a>
-    <a href="userAccountsMenu.php">User Accounts</a>
-    <a href="userProfilesMenu.php">User Profiles</a>
-</div>
-
-<!-- Page Content -->
+<!-- Content -->
 <div class="dashboard-content">
     <h1>Search User Accounts</h1>
-    <input type="text" id="searchBox" placeholder="Search by username or email..." onkeyup="filterTable()">
+
+    <input type="text" id="searchBox" placeholder="Search by username or email..." onkeyup="filterUsers()">
 
     <table border="1" cellpadding="10" cellspacing="0" id="userTable">
         <thead>
@@ -55,7 +41,7 @@ $users = $controller->search(""); // Fetch all users
         </thead>
         <tbody>
             <?php foreach ($users as $user): ?>
-                <tr>
+                <tr class="user-row" data-username="<?= htmlspecialchars($user->username) ?>" data-email="<?= htmlspecialchars($user->email) ?>">
                     <td><?= htmlspecialchars($user->userid) ?></td>
                     <td><?= htmlspecialchars($user->username) ?></td>
                     <td><?= htmlspecialchars($user->email) ?></td>
@@ -70,26 +56,32 @@ $users = $controller->search(""); // Fetch all users
 </div>
 
 <script>
-function filterTable() {
+function filterUsers() {
     const input = document.getElementById("searchBox").value.toUpperCase();
-    const rows = document.querySelectorAll("#userTable tbody tr");
-    let visible = 0;
+    const rows = document.querySelectorAll(".user-row");
+    let found = 0;
 
     rows.forEach(row => {
-        const username = row.cells[1].textContent.toUpperCase();
-        const email = row.cells[2].textContent.toUpperCase();
+        const username = row.dataset.username.toUpperCase();
+        const email = row.dataset.email.toUpperCase();
+        const match = username.includes(input) || email.includes(input);
 
-        if (username.includes(input) || email.includes(input)) {
-            row.style.display = "";
-            visible++;
-        } else {
-            row.style.display = "none";
-        }
+        row.style.display = match ? "" : "none";
+        if (match) found++;
     });
 
-    document.getElementById('noResultsMessage').style.display = (visible === 0) ? "block" : "none";
+    document.getElementById("noResultsMessage").style.display = (found === 0) ? "block" : "none";
 }
 </script>
 
+<a href="userAccountsMenu.php"><button type="button">Back</button></a>
+
 </body>
 </html>
+
+<style>
+#searchBox {
+    width: 300px;
+    max-width: 100%;
+}
+</style>

@@ -1,15 +1,15 @@
 <?php
-require_once '../../db/Database.php';
-require_once '../../Entity/userProfile.php';
+require_once __DIR__ . '/../../Entity/userProfile.php';
 
 class viewUserProfileController {
-    public function getAllProfiles() {
-        $conn = Database::connect();
-        return userProfile::getAllProfiles($conn);
+
+    /** Get all user profiles */
+    public function getAllProfiles(): array {
+        return userProfile::getAll();
     }
 
-    public function getProfileById($id) {
-        $conn = Database::connect();
-        return userProfile::getById($conn, $id);
+    /** Get a single profile by ID */
+    public function getProfileById(int $id): userProfile {
+        return userProfile::getById($id);
     }
 }

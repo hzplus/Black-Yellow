@@ -1,15 +1,10 @@
 <?php
-require_once '../../db/Database.php';
-require_once '../../Entity/user/user.php';
+// Controller/admin/createUserController.php
+
+require_once __DIR__ . '/../../Entity/user.php';
 
 class createUserController {
-    public function userExists($username, $email) {
-        $conn = Database::connect();
-        return User::exists($conn, $username, $email);
-    }
-
-    public function createUser($username, $email, $password, $role) {
-        $conn = Database::connect();
-        return User::create($conn, $username, $email, $password, $role);
+    public function createUser(string $username, string $email, string $password, string $role): bool {
+        return user::create($username, $email, $password, $role);
     }
 }

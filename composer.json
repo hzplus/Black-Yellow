@@ -1,0 +1,7 @@
+{
+    "name": "hz/black-yellow",
+    "description": "Authentication Test Setup",
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    }
+}

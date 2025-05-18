@@ -1,26 +1,37 @@
 <?php
-require_once '../../db/database.php';
-require_once '../../Entity/user/user.php';
+// Controller/admin/suspendUserController.php
 
-class suspendUserController {
-    public function getActiveUsers() {
-        $conn = Database::connect();
-        $stmt = $conn->prepare("SELECT userid, username, email, role FROM users WHERE status = 'active'");
-        $stmt->execute();
-        $result = $stmt->get_result();
+require_once __DIR__ . '/../../Entity/user.php';
 
-        $users = [];
-        while ($row = $result->fetch_assoc()) {
-            $users[] = new User($row['userid'], $row['username'], $row['email'], null, $row['role']);
-        }
-
-        $stmt->close();
-        return $users;
+class suspendUserController
+{
+    /**
+     * Fetch only users whose status is “active”
+     *
+     * @return User[] 
+     */
+    public function getActiveUsers(): array
+    {
+        // Pull all users from the Entity…
+        $all = User::getAll();
+        // …and return only those with status === 'active'
+        return array_filter($all, fn(User $u) => $u->status === 'active');
     }
 
-    public function suspend($userIds) {
-        $conn = Database::connect();
-        return User::suspendUsers($conn, $userIds);
+    /**
+     * Suspend multiple users by setting their status to 'suspended'.
+     *
+     * @param int[] $userIds
+     * @return bool  True if all succeeded
+     */
+    public function suspendUsers(array $userIds): bool
+    {
+        $ok = true;
+        foreach ($userIds as $id) {
+            if (!User::suspend((int)$id)) {
+                $ok = false;
+            }
+        }
+        return $ok;
     }
 }
-?>

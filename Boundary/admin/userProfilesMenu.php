@@ -14,23 +14,8 @@ if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Admin') {
 </head>
 <body>
 
-<!-- Topbar -->
-<div class="topbar">
-    Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!
-    <a href="../../logout.php" class="logout-link">Logout</a>
-</div>
-
-<!-- Logo -->
-<div class="logo">
-    <img src="../../assets/images/logo.jpg" alt="Logo">
-</div>
-
-<!-- Navbar -->
-<div class="navbar">
-    <a href="adminDashboard.php">Home</a>
-    <a href="userAccountsMenu.php">User Accounts</a>
-    <a href="userProfilesMenu.php">User Profiles</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/admin-header.php'; ?>
 
 <!-- Page Content -->
 <div class="dashboard-content">
@@ -38,10 +23,10 @@ if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Admin') {
     <p>Select an action to perform:</p>
 
     <div class="dashboard-options">
-        <button onclick="location.href='createUserProfile.php'">➕ Create Profile</button>
-        <button onclick="location.href='viewUserProfiles.php'">👁️ View Profiles</button>
-        <button onclick="location.href='searchUserProfile.php'">🔍 Search Profile</button>
+        <button onclick="location.href='createUserProfiles.php'">➕ Create User Profile</button>
         <button onclick="location.href='editUserProfiles.php'">✏️ Edit Profile</button>
+        <button onclick="location.href='viewUserProfiles.php'">👁️ View Profiles</button>
+        <button onclick="location.href='searchUserProfiles.php'">🔍 Search Profile</button>
         <button onclick="location.href='suspendUserProfiles.php'" class="suspend">🛑 Suspend Profile</button>
 
     </div>

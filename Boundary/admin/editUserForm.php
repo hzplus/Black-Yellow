@@ -1,7 +1,8 @@
 <?php
 session_start();
-require_once '../../Controller/admin/editUserController.php';
+require_once __DIR__ . '/../../Controller/admin/editUserController.php';
 
+// Access control
 if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Admin') {
     header("Location: ../../login.php");
     exit();
@@ -9,87 +10,99 @@ if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Admin') {
 
 $controller = new editUserController();
 
+// Ensure we have a user_id
 if (!isset($_GET['user_id'])) {
     echo "No user ID provided.";
     exit();
 }
 
-$userId = $_GET['user_id'];
-$user = $controller->getUserById($userId);
+$userId = (int)$_GET['user_id'];
+$user   = $controller->getUserById($userId);
 
 if (!$user) {
     echo "User not found.";
     exit();
 }
 
-$message = "";
-
+$message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'];
-    $email    = $_POST['email'];
+    $username = trim($_POST['username']);
+    $email    = trim($_POST['email']);
     $role     = $_POST['role'];
     $status   = $_POST['status'];
 
     $success = $controller->updateUser($userId, $username, $email, $role, $status);
-    $message = $success ? "✅ User updated successfully!" : "❌ Failed to update user.";
-    $user = $controller->getUserById($userId); // Refresh data
+    $message = $success
+        ? "✅ User updated successfully!"
+        : "❌ Failed to update user.";
+
+    // Refresh user data
+    $user = $controller->getUserById($userId);
 }
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Edit User Details</title>
-    <link rel="stylesheet" href="../../assets/css/style.css">
+    <meta charset="UTF-8">
+    <title>Edit User – Admin</title>
+    <link rel="stylesheet" href="../../assets/css/style.css?v=1.0">
 </head>
 <body>
 
-<div class="topbar">
-    Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!
-    <a href="../../logout.php" class="logout-link">Logout</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/admin-header.php'; ?>
 
-<div class="logo">
-    <img src="../../assets/images/logo.jpg" alt="Logo">
-</div>
-
-<div class="navbar">
-    <a href="adminDashboard.php">Home</a>
-    <a href="userAccountsMenu.php">User Accounts</a>
-    <a href="userProfilesMenu.php">User Profiles</a>
-</div>
-
+<!-- Main content -->
 <div class="dashboard-content">
-    <h1>Edit User: <?= htmlspecialchars($user['username']) ?></h1>
+  <div class="card">
+    <h1>Edit User: <?= htmlspecialchars($user->username) ?></h1>
+
     <?php if ($message): ?>
-        <p><?= $message ?></p>
+      <div class="<?= strpos($message, '❌') === 0 ? 'error' : 'message' ?>">
+        <?= htmlspecialchars($message) ?>
+      </div>
     <?php endif; ?>
 
-    <form method="POST">
-        <label>Username:</label>
-        <input type="text" name="username" value="<?= htmlspecialchars($user['username']) ?>" required>
+    <form method="POST" class="form-grid">
+      <!-- Keep the ID hidden -->
+      <input type="hidden" name="user_id" value="<?= htmlspecialchars($user->userid) ?>">
 
-        <label>Email:</label>
-        <input type="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" required>
+      <div>
+        <label for="username">Username</label><br>
+        <input type="text" id="username" name="username"
+               value="<?= htmlspecialchars($user->username) ?>" required>
+      </div>
 
-        <label>Role:</label>
-        <select name="role" required>
-            <option value="Admin" <?= $user['role'] === 'Admin' ? 'selected' : '' ?>>Admin</option>
-            <option value="Cleaner" <?= $user['role'] === 'Cleaner' ? 'selected' : '' ?>>Cleaner</option>
-            <option value="Homeowner" <?= $user['role'] === 'Homeowner' ? 'selected' : '' ?>>Homeowner</option>
-            <option value="Manager" <?= $user['role'] === 'Manager' ? 'selected' : '' ?>>Manager</option>
+      <div>
+        <label for="email">Email</label><br>
+        <input type="email" id="email" name="email"
+               value="<?= htmlspecialchars($user->email) ?>" required>
+      </div>
+
+      <div>
+        <label for="role">Role</label><br>
+        <select id="role" name="role" required>
+          <option value="Admin"     <?= $user->role === 'Admin'     ? 'selected' : '' ?>>Admin</option>
+          <option value="Cleaner"   <?= $user->role === 'Cleaner'   ? 'selected' : '' ?>>Cleaner</option>
+          <option value="Homeowner" <?= $user->role === 'Homeowner' ? 'selected' : '' ?>>Homeowner</option>
+          <option value="Manager"   <?= $user->role === 'Manager'   ? 'selected' : '' ?>>Manager</option>
         </select>
+      </div>
 
-        <label>Status:</label>
-        <select name="status" required>
-            <option value="active" <?= $user['status'] === 'active' ? 'selected' : '' ?>>Active</option>
-            <option value="suspended" <?= $user['status'] === 'suspended' ? 'selected' : '' ?>>Suspended</option>
+      <div>
+        <label for="status">Status</label><br>
+        <select id="status" name="status" required>
+          <option value="active"    <?= $user->status === 'active'    ? 'selected' : '' ?>>Active</option>
+          <option value="suspended" <?= $user->status === 'suspended' ? 'selected' : '' ?>>Suspended</option>
         </select>
+      </div>
 
-        <br><br>
+      <div class="full-width">
         <button type="submit">Update User</button>
-        <a href="editUser.php"><button type="button">Back</button></a>
+        <button type="button" onclick="location.href='userAccountsMenu.php'">🔙 Back</button>
+      </div>
     </form>
+  </div>
 </div>
 
 </body>

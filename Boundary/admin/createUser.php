@@ -1,13 +1,17 @@
 <?php
 session_start();
-require_once '../../Controller/admin/createUserController.php';
+require_once __DIR__ . '/../../Controller/admin/createUserController.php';
 
+// Access control
 if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Admin') {
     header("Location: ../../login.php");
     exit();
 }
 
-$message = "";
+// Instantiate the controller
+$controller = new createUserController();
+
+$message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
@@ -15,21 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = trim($_POST['password']);
     $role     = $_POST['role'];
 
-    // Exception Flow: Validate input
-    if (empty($username) || empty($email) || empty($password) || empty($role)) {
-        $message = "❌ Please fill in all required fields correctly.";
-    } else {
-        $controller = new createUserController();
-
-        // Alternate Flow: Duplicate check
-        if ($controller->userExists($username, $email)) {
-            $message = "❌ Account already exists.";
-        } else {
-            // Normal Flow: Create user
-            $success = $controller->createUser($username, $email, $password, $role);
-            $message = $success ? "✅ User account created successfully." : "❌ Failed to create user account.";
-        }
-    }
+    $success = $controller->createUser($username, $email, $password, $role);
+    $message = $success
+        ? "✅ User created successfully!"
+        : "❌ Account already exists";
 }
 ?>
 
@@ -40,24 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="../../assets/css/style.css">
 </head>
 <body>
-
-<!-- Topbar -->
-<div class="topbar">
-    Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!
-    <a href="../../logout.php" class="logout-link">Logout</a>
-</div>
-
-<!-- Logo -->
-<div class="logo">
-    <img src="../../assets/images/logo.jpg" alt="Logo">
-</div>
-
-<!-- Navigation -->
-<div class="navbar">
-    <a href="adminDashboard.php">Home</a>
-    <a href="userAccountsMenu.php">User Accounts</a>
-    <a href="userProfilesMenu.php">User Profiles</a>
-</div>
+    
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/admin-header.php'; ?>
 
 <!-- Page Content -->
 <div class="dashboard-content">

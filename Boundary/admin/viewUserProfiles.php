@@ -20,23 +20,8 @@ $profiles = $controller->getAllProfiles();
 </head>
 <body>
 
-<!-- Topbar -->
-<div class="topbar">
-    Welcome, <?= htmlspecialchars($_SESSION['username']) ?>!
-    <a href="../../logout.php" class="logout-link">Logout</a>
-</div>
-
-<!-- Logo -->
-<div class="logo">
-    <img src="../../assets/images/logo.jpg" alt="Logo">
-</div>
-
-<!-- Navbar -->
-<div class="navbar">
-    <a href="adminDashboard.php">Home</a>
-    <a href="userAccountsMenu.php">User Accounts</a>
-    <a href="userProfilesMenu.php">User Profiles</a>
-</div>
+<!-- Include the header (topbar and navbar) -->
+<?php include '../../assets/includes/admin-header.php'; ?>
 
 <!-- Content -->
 <div class="dashboard-content">
@@ -48,17 +33,18 @@ $profiles = $controller->getAllProfiles();
                 <th>Profile ID</th>
                 <th>Role</th>
                 <th>Description</th>
-                <th>Action</th> <!-- Added header for action buttons -->
+                <th>Status</th> 
             </tr>
         </thead>
         <tbody>
             <?php foreach ($profiles as $profile): ?>
                 <tr>
-                    <td><?= htmlspecialchars($profile->profileId) ?></td>
+                    <td><?= htmlspecialchars($profile->profile_id) ?></td>
                     <td><?= htmlspecialchars($profile->role) ?></td>
                     <td><?= htmlspecialchars($profile->description) ?></td>
+                    <td><?= htmlspecialchars($profile->status) ?></td>
                     <td>
-                        <a href="viewUserProfileDetails.php?profile_id=<?= $profile->profileId ?>" class="button">View</a>
+                    <a href="viewUserProfileDetails.php?profile_id=<?= $profile->profile_id ?>">View</a>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -66,7 +52,7 @@ $profiles = $controller->getAllProfiles();
     </table>
 
     <br>
-    <a href="userProfilesMenu.php">← Back to User Profiles</a>
+    <a href="userProfilesMenu.php"><button type="button">Back</button></a>
 
 </body>
 </html>
