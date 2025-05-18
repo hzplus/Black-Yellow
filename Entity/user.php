@@ -281,4 +281,4 @@ class User
     return $user;
 }
     }
-}
+
