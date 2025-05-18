@@ -10,36 +10,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $role     = $_POST['role'] ?? '';
 
     $controller = new authController();
-    $result = $controller->login($username, $password, $role);
+$user = $controller->getUser($username, $role);
+$roleStatus = $controller->getRoleStatus($role);
 
-    if (is_array($result)) {
-        // Login success — store session data
-        $_SESSION['userid']   = $result['userid'];
-        $_SESSION['username'] = $result['username'];
-        $_SESSION['role']     = $result['role'];
+if (!$user) {
+    $message = "User not found";
+} elseif (!password_verify($password, $user['password'])) {
+    $message = "Incorrect password";
+} elseif ($user['status'] !== 'active') {
+    $message = "Account suspended";
+} elseif ($roleStatus !== 'active') {
+    $message = "This role is currently suspended";
+} else {
+    // ✅ Success: set session & redirect
+    $_SESSION['userid']   = $user['userid'];
+    $_SESSION['username'] = $user['username'];
+    $_SESSION['role']     = $user['role'];
 
-        // Redirect based on role (optional)
-        switch ($result['role']) {
-    case 'Admin':
-        header("Location: Boundary/admin/adminDashboard.php");
-        break;
-    case 'Cleaner':
-        header("Location: Boundary/cleaner/cleanerDashboard.php");
-        break;
-    case 'Homeowner':
-        header("Location: Boundary/homeowner/HomeownerDashboard.php");
-        break;
-    case 'Manager':
-        header("Location: Boundary/platformManager/managerDashboard.php");
-        break;
-    default:
-        header("Location: dashboard.php"); // fallback
-}
-exit();
-    } else {
-        // Login failed — store error message
-        $message = $result;
+    switch ($user['role']) {
+        case 'Admin':
+            header("Location: Boundary/admin/adminDashboard.php"); break;
+        case 'Cleaner':
+            header("Location: Boundary/cleaner/cleanerDashboard.php"); break;
+        case 'Homeowner':
+            header("Location: Boundary/homeowner/HomeownerDashboard.php"); break;
+        case 'Manager':
+            header("Location: Boundary/platformManager/managerDashboard.php"); break;
     }
+    exit();
+}
 }
 ?>
 
