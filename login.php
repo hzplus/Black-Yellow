@@ -1,42 +1,44 @@
 <?php
 session_start();
-require_once 'Controller/auth/authController.php';
+require_once __DIR__ . '/Controller/auth/authController.php';
 
 $message = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $role = $_POST['role'];
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    $username = trim($_POST['username'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+    $role     = $_POST['role'] ?? '';
 
-    $auth = new authController();
-    $user = $auth->login($username, $password, $role);
+    $controller = new authController();
+    $result = $controller->login($username, $password, $role);
 
-    if (is_string($user)) {
-        // Suspended message or custom error
-        $message = $user;
-    } elseif ($user) {
-        $_SESSION['userid'] = $user->userid;
-        $_SESSION['username'] = $user->username;
-        $_SESSION['role'] = $user->role;
+    if (is_array($result)) {
+        // Login success — store session data
+        $_SESSION['userid']   = $result['userid'];
+        $_SESSION['username'] = $result['username'];
+        $_SESSION['role']     = $result['role'];
 
-        switch ($user->role) {
-            case 'Admin':
-                header("Location: Boundary/admin/adminDashboard.php");
-                break;
-            case 'Cleaner':
-                header("Location: Boundary/cleaner/cleanerDashboard.php");
-                break;
-            case 'Homeowner':
-                header("Location: Boundary/homeowner/HomeownerDashboard.php");
-                break;
-            case 'Manager':
-                header("Location: Boundary/platformManager/managerDashboard.php");
-                break;
-        }
-        exit();
+        // Redirect based on role (optional)
+        switch ($result['role']) {
+    case 'Admin':
+        header("Location: Boundary/admin/adminDashboard.php");
+        break;
+    case 'Cleaner':
+        header("Location: Boundary/cleaner/cleanerDashboard.php");
+        break;
+    case 'Homeowner':
+        header("Location: Boundary/homeowner/HomeownerDashboard.php");
+        break;
+    case 'Manager':
+        header("Location: Boundary/platformManager/managerDashboard.php");
+        break;
+    default:
+        header("Location: dashboard.php"); // fallback
+}
+exit();
     } else {
-        $message = "Invalid username or password.";
+        // Login failed — store error message
+        $message = $result;
     }
 }
 ?>
