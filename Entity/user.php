@@ -253,20 +253,32 @@ class User
     }
 
     public static function login($username, $password, $role) {
-        $conn = Database::getConnection();
-        $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND role = ?");
-        if (!$stmt) return "DB error";
+    $conn = Database::getConnection();
 
-        $stmt->bind_param("ss", $username, $role);
-        $stmt->execute();
-        $res = $stmt->get_result();
-        $user = $res->fetch_assoc();
+    // First: fetch user with matching role
+    $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND role = ?");
+    if (!$stmt) return "DB error";
+    $stmt->bind_param("ss", $username, $role);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $user = $res->fetch_assoc();
 
-        if (!$user) return "User not found";
+    if (!$user) return "User not found";
+    if (!password_verify($password, $user['password'])) return "Incorrect password";
+    if ($user['status'] !== 'active') return "Account suspended";
 
-        if (!password_verify($password, $user['password'])) return "Incorrect password";
-        if ($user['status'] === 'suspended') return "Account suspended";
+    // ⚠️ Additional role-level status check
+    $stmt2 = $conn->prepare("SELECT status FROM user_profiles WHERE role = ?");
+    $stmt2->bind_param("s", $role);
+    $stmt2->execute();
+    $res2 = $stmt2->get_result();
+    $profile = $res2->fetch_assoc();
 
-        return $user;
+    if (!$profile || $profile['status'] !== 'active') {
+        return "This user role is currently suspended";
+    }
+
+    return $user;
+}
     }
 }
