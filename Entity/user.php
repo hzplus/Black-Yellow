@@ -252,4 +252,21 @@ class User
         return $ok;
     }
 
+    public static function login($username, $password, $role) {
+        $conn = Database::getConnection();
+        $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND role = ?");
+        if (!$stmt) return "DB error";
+
+        $stmt->bind_param("ss", $username, $role);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $user = $res->fetch_assoc();
+
+        if (!$user) return "User not found";
+
+        if (!password_verify($password, $user['password'])) return "Incorrect password";
+        if ($user['status'] === 'suspended') return "Account suspended";
+
+        return $user;
+    }
 }
