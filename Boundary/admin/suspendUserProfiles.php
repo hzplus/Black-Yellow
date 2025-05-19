@@ -9,10 +9,16 @@ if (!isset($_SESSION['userid']) || $_SESSION['role'] !== 'Admin') {
 
 $controller = new suspendUserProfileController();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['profile_ids'])) {
-    $controller->suspend($_POST['profile_ids']);
-    header("Location: suspendUserProfiles.php?success=1");
-    exit();
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['profile_ids'])) {
+        $controller->suspend($_POST['profile_ids']);
+        header("Location: suspendUserProfiles.php?success=1");
+        exit();
+    } else {
+        // Redirect with an error query parameter
+        header("Location: suspendUserProfiles.php?error=1");
+        exit();
+    }
 }
 
 $profiles = $controller->getActiveProfiles();
@@ -32,8 +38,10 @@ $profiles = $controller->getActiveProfiles();
 <div class="dashboard-content">
     <h1>Suspend User Profiles</h1>
 
-    <?php if (isset($_GET['success'])): ?>
-        <p style="color: green;">✅ Selected profiles suspended successfully.</p>
+  <?php if (isset($_GET['error']) && $_GET['error'] == 1): ?>
+        <p style="color:red;">❌ No profiles selected. Please select at least one.</p>
+    <?php elseif (isset($_GET['success']) && $_GET['success'] == 1): ?>
+        <p style="color:green;">✅ Selected profiles suspended successfully!</p>
     <?php endif; ?>
 
     <form method="POST">
