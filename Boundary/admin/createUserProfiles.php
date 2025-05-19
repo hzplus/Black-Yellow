@@ -17,8 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $success = $ctrl->createProfile($role, $description);
     $message = $success
-        ? "✅ Profile “{$role}” created successfully!"
-        : "❌ Failed to create profile “{$role}”.";
+        ? "✅ Profile created successfully!"
+        : "❌ Profile already exists!";
 }
 ?>
 <!DOCTYPE html>
